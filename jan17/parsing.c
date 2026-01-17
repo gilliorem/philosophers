@@ -9,7 +9,6 @@
 
 /* prototypes of functions */
 
-
 typedef struct s_table t_table;
 typedef struct s_timer t_timer;
 typedef struct s_philo t_philo;
