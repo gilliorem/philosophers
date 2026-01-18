@@ -51,6 +51,7 @@ typedef struct s_table
 {
 	int number_of_philos;
 	t_philo *philo;
+	pthread_mutex_t *forks;
 //	pthread_t t_philos[];	
 } t_table;
 
@@ -59,6 +60,8 @@ typedef struct s_philo
 	t_settings *settings;
 	int id;
 	pthread_t t;
+	pthread_mutex_t *left_fork;
+	pthread_mutex_t *right_fork;
 	int time_to_die;
 	int time_to_eat;
 	int time_to_sleep;
@@ -129,14 +132,28 @@ void *eat_routine(void *arg)
 	t_philo *philo = (t_philo *) arg;
 	t_settings *settings = philo->settings;
 	t_timer *timer = settings->timer;
-	int i = 0;
+	t_table *table = settings->table;
+	pthread_mutex_t log;
+	pthread_mutex_init(&log, NULL);
+	philo->right_fork = &table->forks[(philo->id + 1) % table->number_of_philos];
+	philo->left_fork = &table->forks[philo->id - 1];
+	int i = 1;
 	while (i <= philo->rounds)
 	{
+		pthread_mutex_lock(philo->left_fork);
+		pthread_mutex_lock(&log);
+		printf("%ld ms %d has taken a *left* fork[%d]\n", now_ms(timer), philo->id, philo->id -1);
+		pthread_mutex_unlock(&log);
+		pthread_mutex_lock(philo->right_fork);
+		pthread_mutex_lock(&log);
+		printf("%ld ms %d has taken *right* fork[%d]\n", now_ms(timer), philo->id, ((philo->id + 1) % table->number_of_philos));
 		printf("%ld ms %d starts eating\n", now_ms(timer), philo->id);
+		pthread_mutex_unlock(&log);
 		usleep(philo->time_to_eat);
+		pthread_mutex_unlock(philo->right_fork);
+		pthread_mutex_unlock(philo->left_fork);
 		i++;
 	}
-	//printf("%ld ms %d has taken a fork\n", philo->timer->elapsed_time, philo->id);
 	//get_timestamp(philo->timer);
 //	printf("%ld ms %d has taken a fork\n", now_ms(timer), philo->id);	
 	return NULL;
@@ -166,10 +183,12 @@ int main(int argc, char *argv[])
 	}
 	if (argc == 6)
 		settings->rounds = atoi(argv[5]);
+	/*
 	printf("number_of_philosophers: %d\n", settings->table->number_of_philos);
 	printf("time to die: %d\n", settings->time_to_die);
 	printf("time_to_eat: %d\n", settings->time_to_eat);
 	printf("time_to_sleep: %d\n", settings->time_to_sleep);
+	*/
 	if (argc == 6)
 		printf("rounds: %d\n", settings->rounds);
 
@@ -183,6 +202,9 @@ int main(int argc, char *argv[])
 		philos[i].time_to_sleep = settings->time_to_sleep * 1000;
 		philos[i].rounds = settings->rounds;
 	}
+	settings->table->forks = calloc(settings->table->number_of_philos + 1, sizeof(pthread_mutex_t));
+	for (int i = 0; i <= settings->table->number_of_philos; i++)
+		pthread_mutex_init(settings->table->forks + i, NULL);
 	for (int i = 0; i < settings->table->number_of_philos; i++)
 	{
 		pthread_create(&philos[i].t, NULL, &eat_routine, &(philos[i]));
@@ -191,25 +213,7 @@ int main(int argc, char *argv[])
 	{
 		pthread_join(philos[i].t, NULL);
 	}
-	//t_philo *philos = init_philos(settings->table->number_of_philos);	
-/*
-
-//	eat_routine(&table);
-	pthread_t philos[table.input_from_av[0]];
-	while (1)
-	{
-		get_timestamp(table.philo->timer);
-		for (int i = 0; i < table.input_from_av[0]; i++)
-		{
-			table.philo[i].id = i + 1;
-			table.philo[i].time_to_die = table.input_from_av[1] * 1000;
-			table.philo[i].time_to_eat = table.input_from_av[2] * 1000;
-			table.philo[i].time_to_sleep = table.input_from_av[3] * 1000;
-			pthread_create(philos + i, NULL, &eat_routine, &(table.philo[i]));
-		}
-		for (int i = 0; i < table.input_from_av[0]; i++)
-			pthread_join(philos[i], NULL);
-	}
-	*/
+	for (int i = 0; i <= settings->table->number_of_philos; i++)
+		pthread_mutex_destroy(&settings->table->forks[i]);
 	return 0;
 }
