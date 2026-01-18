@@ -127,7 +127,9 @@ long	now_ms(t_timer *timer)
 	return elapsed_ms;
 }
 
-void *eat_routine(void *arg)
+int global_lock;
+
+void *eat_sleep_routine(void *arg)
 {
 	t_philo *philo = (t_philo *) arg;
 	t_settings *settings = philo->settings;
@@ -135,27 +137,43 @@ void *eat_routine(void *arg)
 	t_table *table = settings->table;
 	pthread_mutex_t log;
 	pthread_mutex_init(&log, NULL);
-	philo->right_fork = &table->forks[(philo->id + 1) % table->number_of_philos];
+//	philo->right_fork = &table->forks[(philo->id + 1) % table->number_of_philos];
+//	philo->left_fork = &table->forks[philo->id - 1];
 	philo->left_fork = &table->forks[philo->id - 1];
+	philo->right_fork = &table->forks[(philo-> id) % table->number_of_philos];
 	int i = 1;
 	while (i <= philo->rounds)
 	{
 		pthread_mutex_lock(philo->left_fork);
-		pthread_mutex_lock(&log);
-		printf("%ld ms %d has taken a *left* fork[%d]\n", now_ms(timer), philo->id, philo->id -1);
-		pthread_mutex_unlock(&log);
+		global_lock++;
+//		pthread_mutex_lock(&log);
+		printf("%ld ms %d has taken a *left* fork[%d]\n", now_ms(timer), philo->id, philo->id - 1);
+//		pthread_mutex_unlock(&log);
+		if (global_lock >= 2)
+		{
+			printf("Deadlock, both *left* fork have been taken. %d put one left fork down.\n", philo->id);
+			pthread_mutex_unlock(philo->left_fork);
+			i = 1;
+			global_lock = 0;
+			continue;
+		}
 		pthread_mutex_lock(philo->right_fork);
-		pthread_mutex_lock(&log);
-		printf("%ld ms %d has taken *right* fork[%d]\n", now_ms(timer), philo->id, ((philo->id + 1) % table->number_of_philos));
+//		global_lock++;
+		//if (global_lock >= 3){printf("Deadlock, both *right* fork have been taken twice. put one right fork down.\n"); }
+//		pthread_mutex_lock(&log);
+		printf("%ld ms %d has taken *right* fork[%d]\n", now_ms(timer), philo->id, ((philo->id) % table->number_of_philos));
 		printf("%ld ms %d starts eating\n", now_ms(timer), philo->id);
-		pthread_mutex_unlock(&log);
+//		pthread_mutex_unlock(&log);
 		usleep(philo->time_to_eat);
+		printf("%ld ms %d is done eating. put the forks back on the table.\n", now_ms(timer), philo->id);
 		pthread_mutex_unlock(philo->right_fork);
 		pthread_mutex_unlock(philo->left_fork);
+
+		printf("%ld ms %d starts sleeping.\n", now_ms(timer), philo->id);
+		usleep(philo->time_to_sleep);
+		printf("%ld ms %d is thinking.\n", now_ms(timer), philo->id);
 		i++;
 	}
-	//get_timestamp(philo->timer);
-//	printf("%ld ms %d has taken a fork\n", now_ms(timer), philo->id);	
 	return NULL;
 }
 
@@ -207,7 +225,7 @@ int main(int argc, char *argv[])
 		pthread_mutex_init(settings->table->forks + i, NULL);
 	for (int i = 0; i < settings->table->number_of_philos; i++)
 	{
-		pthread_create(&philos[i].t, NULL, &eat_routine, &(philos[i]));
+		pthread_create(&philos[i].t, NULL, &eat_sleep_routine, &(philos[i]));
 	}
 	for (int i = 0; i < settings->table->number_of_philos; i++)
 	{
