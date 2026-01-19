@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <stdbool.h>
 
 /*
 missing:
@@ -35,7 +36,9 @@ typedef struct s_settings
 	int time_to_die;
 	int time_to_eat;
 	int time_to_sleep;
-	pthread_t t_log;
+	//pthread_t t_log;
+	pthread_mutex_t m_log;
+	pthread_t monitor;
 	t_table *table;
 	t_timer *timer;
 } t_settings;
@@ -66,6 +69,10 @@ typedef struct s_philo
 	int time_to_die;
 	int time_to_eat;
 	int time_to_sleep;
+	int time_since_last_meal;
+	int last_meal;
+	bool has_eaten;
+	bool dead;
 	int rounds;
 } t_philo; 
 
@@ -90,6 +97,7 @@ int check_number(char *av)
 	return 1;
 }
 
+/*
 void	*log_routine(void *arg)
 {
 	char* msg = (char*) arg;
@@ -97,6 +105,7 @@ void	*log_routine(void *arg)
 
 	return NULL;
 }
+*/
 
 t_settings *init_settings(void)
 {
@@ -104,7 +113,7 @@ t_settings *init_settings(void)
 	settings = calloc(1, sizeof(t_settings));
 	settings->timer = init_time();	
 	settings->table = init_table();
-	pthread_create(&settings->t_log, NULL, &log_routine, NULL);
+	pthread_mutex_init(&settings->m_log, NULL);
 	return settings;
 }
 
@@ -137,18 +146,23 @@ long	now_ms(t_timer *timer)
 	return elapsed_ms;
 }
 
-typedef struct s_global
+void	*is_time_for_you_to_die(void *arg)
 {
-	int left_f;
-} t_global;
-
-t_global *init_global()
-{
-	t_global *global = calloc(1, sizeof(t_global));
-	global->left_f = 0;
-	return global;
+	t_settings *settings = (t_settings *) arg;
+	t_table *table = settings->table;
+	t_timer *timer = settings->timer;
+	while (true)
+	{
+		for (int i = 0; table->number_of_philos; i++)
+		{
+			table->philo[i].time_since_last_meal = now_ms(timer) - table->philo[i].last_meal;
+			if (table->philo[i].time_since_last_meal > settings->time_to_die)
+				table->philo[i].dead = true;
+			// return somethin ?
+		}
+		return  (NULL);
+	}
 }
-
 
 void *eat_sleep_routine(void *arg)
 {
@@ -156,28 +170,42 @@ void *eat_sleep_routine(void *arg)
 	t_settings *settings = philo->settings;
 	t_timer *timer = settings->timer;
 	t_table *table = settings->table;
-	pthread_mutex_t log;
-	pthread_mutex_init(&log, NULL);
+//	pthread_mutex_init(&log, NULL);
 	philo->left_fork = &table->forks[philo->id - 1];
 	philo->right_fork = &table->forks[philo->id % table->number_of_philos];
 	int i = 1;
 	while (i <= philo->rounds)
 	{
-		pthread_mutex_lock(&log);
-		printf("ROUND %d\n", i);
-		pthread_mutex_unlock(&log);
-		if (philo->id % 2 == 0)
-			usleep(200);
-		pthread_mutex_lock(philo->left_fork);
-//		pthread_mutex_lock(&log);
-		printf("%ld ms %d has taken a *left* fork[%d]\n", now_ms(timer), philo->id, philo->id - 1);
-//		pthread_mutex_unlock(&log);
-		pthread_mutex_lock(philo->right_fork);
-//		pthread_mutex_lock(&log);
-		printf("%ld ms %d has taken a *right* fork[%d]\n", now_ms(timer), philo->id, ((philo->id) % table->number_of_philos));
+		pthread_mutex_lock(&settings->m_log);
+		printf("meals %d\n", i); // has to be in a separate thread
+		pthread_mutex_unlock(&settings->m_log);
+//		if (philo->id % 2 == 0)
+//			usleep(200);
+		philo->has_eaten = true;
+		if (table->number_of_philos % 2 == 0)
+		{
+			printf("number of philos is even, philo taking right fork first.\n");
+			pthread_mutex_lock(philo->right_fork);
+			printf("%ld ms %d has taken a *right* fork[%d]\n", now_ms(timer), philo->id, philo->id % table->number_of_philos);
+			pthread_mutex_lock(philo->left_fork);
+			printf("%ld ms %d has taken a *left* fork[%d]\n", now_ms(timer), philo->id, philo->id -1);
+		}
+		else
+		{
+			pthread_mutex_lock(philo->left_fork);
+			pthread_mutex_lock(&settings->m_log);
+			printf("%ld ms %d has taken a *left* fork[%d]\n", now_ms(timer), philo->id, philo->id - 1);
+			pthread_mutex_unlock(&settings->m_log);
+			pthread_mutex_lock(philo->right_fork);
+			pthread_mutex_lock(&settings->m_log);
+			printf("%ld ms %d has taken a *right* fork[%d]\n", now_ms(timer), philo->id, ((philo->id) % table->number_of_philos));
+			pthread_mutex_unlock(&settings->m_log);
+		}
+		pthread_mutex_lock(&settings->m_log);
 		printf("%ld ms %d starts eating\n", now_ms(timer), philo->id);
-//		pthread_mutex_unlock(&log);
+		pthread_mutex_unlock(&settings->m_log);
 		usleep(philo->time_to_eat);
+		philo->has_eaten = true;
 		printf("%ld ms %d is done eating. put the forks back on the table.\n", now_ms(timer), philo->id);
 		pthread_mutex_unlock(philo->right_fork);
 		pthread_mutex_unlock(philo->left_fork);
@@ -186,10 +214,10 @@ void *eat_sleep_routine(void *arg)
 		usleep(philo->time_to_sleep);
 		printf("%ld ms %d is thinking.\n", now_ms(timer), philo->id);
 		i++;
-		pthread_mutex_lock(&log);
+		pthread_mutex_lock(&settings->m_log);
 		printf("Round %d ended.\n",i);
 		printf("\n");
-		pthread_mutex_unlock(&log);
+		pthread_mutex_unlock(&settings->m_log);
 	}
 	return NULL;
 }
@@ -240,6 +268,7 @@ int main(int argc, char *argv[])
 	settings->table->forks = calloc(settings->table->number_of_philos + 1, sizeof(pthread_mutex_t));
 	for (int i = 0; i <= settings->table->number_of_philos; i++)
 		pthread_mutex_init(settings->table->forks + i, NULL);
+	pthread_create(&settings->monitor, NULL, &is_time_for_you_to_die, &settings);
 	for (int i = 0; i < settings->table->number_of_philos; i++)
 	{
 		pthread_create(&philos[i].t, NULL, &eat_sleep_routine, &(philos[i]));
