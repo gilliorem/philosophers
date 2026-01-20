@@ -160,19 +160,26 @@ void	*is_time_for_you_to_die(void *arg)
 	
 	//for (int i = 0; i  < table->number_of_philos; i++)
 	//	printf("philo[%d]\n", settings->philo[i].id);
-	int i = 0;
-	while (i < 10)
+	int j = 0;
+	while (j < 100)
 	{
-		for (int i = 0; table->number_of_philos; i++)
+		for (int i = 0; i < table->number_of_philos; i++)
 		{
 			//printf("now: %ld\n",now_ms(timer));
 			settings->philo[i].time_since_last_meal = now_ms(timer) - settings->philo[i].last_meal;
+			printf("time %d ate: %d\n", settings->philo[i].id, settings->philo[i].last_meal);
+			printf("time since last meal:%d\n", settings->philo[i].time_since_last_meal);
 			if (settings->philo[i].time_since_last_meal > settings->philo[i].time_to_die)
-				table->philo[i].dead = true;
+			{
+				printf("Time since last meal:%d > time to die:%d\n", settings->philo[i].time_since_last_meal, settings->time_to_die);
+				printf("philo %d DIED\n", settings->philo[i].id);
+				settings->philo[i].dead = true;
+				usleep(200);
+			}
 			// return somethin ?
 		}
 		usleep(500);
-		i++;
+		j++;
 	}
 	return  (NULL);
 }
