@@ -72,6 +72,7 @@ typedef struct s_philo
 	int time_to_sleep;
 	int time_since_last_meal;
 	int last_meal;
+	pthread_mutex_t global_m;
 	bool has_eaten;
 	bool dead;
 	int rounds;
@@ -161,27 +162,32 @@ void	*is_time_for_you_to_die(void *arg)
 	//for (int i = 0; i  < table->number_of_philos; i++)
 	//	printf("philo[%d]\n", settings->philo[i].id);
 	int j = 0;
-	while (j < 100)
+//	printf("time to die: %d\n", settings->)
+	// condition de variable au lieu d'1 while true
+	while (true)
 	{
 		for (int i = 0; i < table->number_of_philos; i++)
 		{
 			//printf("now: %ld\n",now_ms(timer));
+			pthread_mutex_lock(&settings->philo[i].global_m);
 			settings->philo[i].time_since_last_meal = now_ms(timer) - settings->philo[i].last_meal;
-			printf("time %d ate: %d\n", settings->philo[i].id, settings->philo[i].last_meal);
-			printf("time since last meal:%d\n", settings->philo[i].time_since_last_meal);
+			//printf("time %d ate: %d\n", settings->philo[i].id, settings->philo[i].last_meal);
+			//printf("time since last meal:%d\n", settings->philo[i].time_since_last_meal);
+			pthread_mutex_unlock(&settings->philo[i].global_m);
+			//printf("time to die:%d\n", settings->philo[i].time_to_die);
 			if (settings->philo[i].time_since_last_meal > settings->philo[i].time_to_die)
 			{
-				printf("Time since last meal:%d > time to die:%d\n", settings->philo[i].time_since_last_meal, settings->time_to_die);
+				//printf("Time since last meal:%d > time to die:%d\n", settings->philo[i].time_since_last_meal, settings->time_to_die);
 				printf("philo %d DIED\n", settings->philo[i].id);
 				settings->philo[i].dead = true;
-				usleep(200);
+				exit(EXIT_FAILURE);
 			}
 			// return somethin ?
 		}
-		usleep(500);
+		usleep(5000);
 		j++;
 	}
-	return  (NULL);
+	return (NULL);
 }
 
 /* TODO: separate cut down is_time_to_die in a function
@@ -213,7 +219,7 @@ void *eat_sleep_routine(void *arg)
 		philo->has_eaten = true;
 		if (table->number_of_philos % 2 == 0)
 		{
-			printf("number of philos is even, philo taking right fork first.\n");
+			//printf("number of philos is even, philo taking right fork first.\n");
 			pthread_mutex_lock(philo->right_fork);
 			printf("%ld ms %d has taken a *right* fork[%d]\n", now_ms(timer), philo->id, philo->id % table->number_of_philos);
 			pthread_mutex_lock(philo->left_fork);
@@ -233,19 +239,21 @@ void *eat_sleep_routine(void *arg)
 		pthread_mutex_lock(&settings->m_log);
 		printf("%ld ms %d starts eating\n", now_ms(timer), philo->id);
 		pthread_mutex_unlock(&settings->m_log);
-		usleep(philo->time_to_eat);
+		usleep(philo->time_to_eat * 1000);
+		pthread_mutex_lock(&philo->global_m);
 		philo->has_eaten = true;
 		philo->last_meal = now_ms(timer);
-		printf("%ld ms %d is done eating. put the forks back on the table.\n", now_ms(timer), philo->id);
+		pthread_mutex_unlock(&philo->global_m);
+		//printf("%ld ms %d is done eating. put the forks back on the table.\n", now_ms(timer), philo->id);
 		pthread_mutex_unlock(philo->right_fork);
 		pthread_mutex_unlock(philo->left_fork);
 
 		printf("%ld ms %d starts sleeping.\n", now_ms(timer), philo->id);
-		usleep(philo->time_to_sleep);
+		usleep(philo->time_to_sleep * 1000);
 		printf("%ld ms %d is thinking.\n", now_ms(timer), philo->id);
 		i++;
 		pthread_mutex_lock(&settings->m_log);
-		printf("Round %d ended.\n",i);
+		//printf("Round %d ended.\n",i);
 		printf("\n");
 		pthread_mutex_unlock(&settings->m_log);
 	}
@@ -276,18 +284,19 @@ int main(int argc, char *argv[])
 	printf("time_to_eat: %d\n", settings->time_to_eat);
 	printf("time_to_sleep: %d\n", settings->time_to_sleep);
 	*/
-	if (argc == 6)
-		printf("rounds: %d\n", settings->rounds);
+	//if (argc == 6)
+	//	printf("rounds: %d\n", settings->rounds);
 
 	t_philo *philos = calloc(settings->table->number_of_philos + 1, sizeof(t_philo));
 	for (int i = 0; i <= settings->table->number_of_philos; i++)
 	{
 		philos[i].settings = settings;
 		philos[i].id = i + 1;
-		philos[i].time_to_die = settings->time_to_die * 1000; // convert ms ?
-		philos[i].time_to_eat = settings->time_to_eat * 1000;
-		philos[i].time_to_sleep = settings->time_to_sleep * 1000;
+		philos[i].time_to_die = settings->time_to_die ; // convert ms ?
+		philos[i].time_to_eat = settings->time_to_eat ;
+		philos[i].time_to_sleep = settings->time_to_sleep ;
 		philos[i].rounds = settings->rounds;
+		pthread_mutex_init(&philos[i].global_m, NULL);
 	}
 	settings->table->forks = calloc(settings->table->number_of_philos + 1, sizeof(pthread_mutex_t));
 	for (int i = 0; i <= settings->table->number_of_philos; i++)
