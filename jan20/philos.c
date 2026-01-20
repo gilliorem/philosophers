@@ -41,6 +41,7 @@ typedef struct s_settings
 	pthread_t monitor;
 	t_table *table;
 	t_timer *timer;
+	t_philo *philo;
 } t_settings;
 
 typedef struct s_timer
@@ -148,26 +149,26 @@ long	now_ms(t_timer *timer)
 
 void	*is_time_for_you_to_die(void *arg)
 {
-	t_settings *settings = (t_settings *) arg;
-	//t_philo *philo = (t_philo *) arg;
-	//t_settings *settings = philo->settings;
+	t_settings *settings = (t_settings*) arg;
+	settings = &(*settings);
+//	printf("ROUNDS: %d\n", settings->rounds);
 	t_table *table = settings->table;
 	t_timer *timer = settings->timer;
-	t_philo *philos = table->philo;
-	printf("Number of philos: %d\n", table->number_of_philos);
-	return NULL;
-	for (int i = 0; i  < table->number_of_philos; i++)
-		printf("philo[%d]\n", philos[i].id);
-	return NULL;
+	//t_philo *philos = table->philo; // should be a pointer to the array philos
+//	printf("**%d**\n",settings->philo->id);
+	//printf("**%d**\n", settings->table->number_of_philos);
+	
+	//for (int i = 0; i  < table->number_of_philos; i++)
+	//	printf("philo[%d]\n", settings->philo[i].id);
 	int i = 0;
 	while (i < 10)
 	{
 		for (int i = 0; table->number_of_philos; i++)
 		{
-			printf("now: %ld\n",now_ms(timer));
-			//table->philo[i].time_since_last_meal = now_ms(timer) - table->philo[i].last_meal;
-//			if (table->philo[i].time_since_last_meal > settings->time_to_die)
-//				table->philo[i].dead = true;
+			//printf("now: %ld\n",now_ms(timer));
+			settings->philo[i].time_since_last_meal = now_ms(timer) - settings->philo[i].last_meal;
+			if (settings->philo[i].time_since_last_meal > settings->philo[i].time_to_die)
+				table->philo[i].dead = true;
 			// return somethin ?
 		}
 		usleep(500);
@@ -175,6 +176,18 @@ void	*is_time_for_you_to_die(void *arg)
 	}
 	return  (NULL);
 }
+
+/* TODO: separate cut down is_time_to_die in a function
+ * that monitor routine will call
+ * 
+void monitor_routine(void *arg)
+{
+	t_settings *settings = (t_settings *)settings;
+	t_table *table = settings->table;
+	t_philo *philo = table->philo;
+	is_time_for_you_to_die(philo);
+}
+*/
 
 void *eat_sleep_routine(void *arg)
 {
@@ -276,7 +289,8 @@ int main(int argc, char *argv[])
 	{
 		pthread_create(&philos[i].t, NULL, &eat_sleep_routine, &(philos[i]));
 	}
-	pthread_create(&settings->monitor, NULL, &is_time_for_you_to_die, &settings);
+	settings->philo = philos;
+	pthread_create(&settings->monitor, NULL, &is_time_for_you_to_die, settings);
 	for (int i = 0; i < settings->table->number_of_philos; i++)
 	{
 		pthread_join(philos[i].t, NULL);
