@@ -36,7 +36,6 @@ typedef struct s_settings
 	int time_to_die;
 	int time_to_eat;
 	int time_to_sleep;
-	//pthread_t t_log;
 	pthread_mutex_t m_log;
 	pthread_t monitor;
 	t_table *table;
@@ -99,7 +98,6 @@ int check_number(char *av)
 	return 1;
 }
 
-
 t_settings *init_settings(void)
 {
 	t_settings *settings;
@@ -125,6 +123,19 @@ t_table *init_table(void)
 	t_table *table;
 	table = calloc(1, sizeof(t_table));
 	return table;
+}
+
+void	free_philos(t_table *table)
+{
+	int	i;
+
+	i = 0;
+	while (i < table->number_of_philos)
+	{
+		free (&table->philo[i]);
+		i++;
+	}
+	free(table->philo);
 }
 
 long	now_ms(t_timer *timer)
@@ -185,6 +196,11 @@ void	*is_time_for_you_to_die(void *arg)
 				printf("Time since last meal:%d > time to die:%d\n", settings->philo[i].time_since_last_meal, settings->time_to_die);
 				printf("philo %d DIED\n", settings->philo[i].id);
 				settings->philo[i].dead = true;
+				//free_philos(table);
+				//free(timer);
+				free(settings->philo);
+				free(table);
+				free(settings);
 				exit(EXIT_FAILURE);
 			}
 			// return somethin ?
@@ -284,8 +300,14 @@ void *eat_sleep_routine(void *arg)
 
 int main(int argc, char *argv[])
 {
-	if (argc < 5){printf("usage: <number_of_philos> <time_to_die> <time_to_eat> <time_to_sleep> <[rounds]>\n"); return 0;}
-	t_settings *settings = init_settings();
+	if (argc < 5)
+	{
+		printf("usage: <number_of_philos> <time_to_die> <time_to_eat> <time_to_sleep> <[number_of_times_each_philo_must_eat]>\n");
+	       	return 0;
+	}
+	t_settings *settings;
+       
+	settings = init_settings();
 	if (argc >= 5)
 	{
 		for (int i = 1; i <= argc - 1; i++)
@@ -335,6 +357,10 @@ int main(int argc, char *argv[])
 	}
 	pthread_join(settings->monitor, NULL);
 	for (int i = 0; i <= settings->table->number_of_philos; i++)
+	{
 		pthread_mutex_destroy(&settings->table->forks[i]);
+		pthread_mutex_destroy(&philos[i].global_m);
+	}
+	pthread_mutex_destroy(&settings->m_log);
 	return 0;
 }
