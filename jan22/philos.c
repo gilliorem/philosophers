@@ -70,46 +70,51 @@ t_table	*init_table(void);
 t_philo *init_philo();
 t_philo *init_philos(int number_of_philos);
 
-int check_number(char *av)
+int	check_number(char *av)
 {
-	int i = 0;
+	int	i;
+	
+	i = 0;
 	while (av[i])
 	{
 		if (av[i] < '0' || av[i] > '9')
 		{
 			printf("NAN\n");
-			return 0;
+			return (0);
 		}
 		i++;
 	}
-	return 1;
+	return (1);
 }
 
-t_settings *init_settings(void)
+t_settings	*init_settings(void)
 {
-	t_settings *settings;
+	t_settings	*settings;
+
 	settings = calloc(1, sizeof(t_settings));
 	settings->timer = init_time();	
 	settings->table = init_table();
 	pthread_mutex_init(&settings->m_log, NULL);
-	return settings;
+	return (settings);
 }
 
 /* Initialize a pointer to global object used throughout the program */
-t_timer* init_time(void)
+t_timer*	init_time(void)
 {
-	t_timer *timer;
+	t_timer	*timer;
+
 	timer = calloc(1, sizeof(t_timer));
 	gettimeofday(&timer->start, NULL);	
 	timer->start_ms = (timer->start.tv_sec * 1000) + (timer->start.tv_usec / 1000);
-	return timer;
+	return (timer);
 }
 
-t_table *init_table(void)
+t_table	*init_table(void)
 {
-	t_table *table;
+	t_table	*table;
+
 	table = calloc(1, sizeof(t_table));
-	return table;
+	return (table);
 }
 
 void	free_philos(t_table *table)
@@ -127,14 +132,14 @@ void	free_philos(t_table *table)
 
 long	now_ms(t_timer *timer)
 {
-	long elapsed_ms;
-	long now_ms;
-	struct timeval now;
+	long	elapsed_ms;
+	long	now_ms;
+	struct	timeval now;
 	
 	gettimeofday(&now, NULL);
 	now_ms = (now.tv_sec * 1000) + (now.tv_usec / 1000);
 	elapsed_ms = now_ms - timer->start_ms;
-	return elapsed_ms;
+	return (elapsed_ms);
 }
 
 void	m_print(t_timer *timer, t_philo *philo, char *msg) 
@@ -159,15 +164,16 @@ void	msleep(int n)
 
 void	*has_everyone_eaten(void *arg)
 {
-	t_settings *settings = (t_settings*) arg;
-	int round = 0;
+	int		round;        
+	t_settings	*settings;
+
+	round = 0;
+	settings = (t_settings*) arg;
 	while (1)
 	{
 		pthread_mutex_lock(&settings->m_log);
-//		printf("meals:%d\n",settings->meals);
 		if (settings->meals >= settings->table->number_of_philos)
 		{
-			//printf("***END OF ROUND %d***\n---ROUNDS left:%d---\n", round + 1, settings->rounds - (round + 1));
 			round++;
 			settings->meals = 0;
 		}
@@ -175,40 +181,40 @@ void	*has_everyone_eaten(void *arg)
 		{
 			printf("end of the simulation\n");
 			pthread_mutex_unlock(&settings->m_log);
+			// clean
 			exit(EXIT_SUCCESS);
 		}
 		pthread_mutex_unlock(&settings->m_log);
 		msleep(1);
 	}
-	return NULL;
+	return (NULL);
 }
 
 void	*is_time_for_you_to_die(void *arg)
 {
-	t_settings *settings = (t_settings*) arg;
+	t_settings *settings;
+	t_table	*table;
+	t_timer	*timer;
+	int	j;
+       
+	settings = (t_settings*) arg;
 	settings = &(*settings);
-	t_table *table = settings->table;
-	t_timer *timer = settings->timer;
-	// **condition de variable au lieu d'1 while true**
-	int j = 0;
+	table = settings->table;
+	timer = settings->timer;
+	j = 0;
 	while (true)
 	{
 		for (int i = 0; i < table->number_of_philos; i++)
 		{
-			//printf("now: %ld\n",now_ms(timer));
 			pthread_mutex_lock(&settings->philo[i].global_m);
 			settings->philo[i].time_since_last_meal = now_ms(timer) - settings->philo[i].last_meal;
-			//printf("time %d ate: %d\n", settings->philo[i].id, settings->philo[i].last_meal);
-			//printf("time since last meal:%d\n", settings->philo[i].time_since_last_meal);
 			pthread_mutex_unlock(&settings->philo[i].global_m);
-			//printf("time to die:%d\n", settings->philo[i].time_to_die);
 			if (settings->philo[i].time_since_last_meal > settings->philo[i].time_to_die)
 			{
+				/*function*/
 				printf("Time since last meal:%d > time to die:%d\n", settings->philo[i].time_since_last_meal, settings->time_to_die);
-				printf("philo %d DIED\n", settings->philo[i].id);
+				m_print(timer, &settings->philo[i], "died");
 				settings->philo[i].dead = true;
-				//free_philos(table);
-				//free(timer);
 				free(settings->philo);
 				free(table);
 				free(settings);
@@ -236,13 +242,19 @@ void monitor_routine(void *arg)
 
 void *eat_sleep_routine(void *arg)
 {
-	t_philo *philo = (t_philo *) arg;
-	t_settings *settings = philo->settings;
-	t_timer *timer = settings->timer;
-	t_table *table = settings->table;
+	t_philo *philo;
+	t_settings	*settings;
+	t_timer	*timer;
+	t_table	*table;
+	int	i;
+       
+	philo = (t_philo *) arg;
+	settings = philo->settings;
+	timer = settings->timer;
+	table = settings->table;
 	philo->left_fork = &table->forks[philo->id - 1];
 	philo->right_fork = &table->forks[philo->id % table->number_of_philos];
-	int i = 1;
+	i = 1;
 	while (i <= philo->rounds || true)
 	{
 		philo->has_eaten = false;
@@ -251,14 +263,10 @@ void *eat_sleep_routine(void *arg)
 			msleep(1);
 			pthread_mutex_lock(philo->right_fork);
 			pthread_mutex_lock(philo->left_fork);
-			//m_print(timer, philo, "has taken a fork");
 			m_forklog(timer, philo, "has taken a fork");
-			//pthread_mutex_lock(philo->left_fork);
-			//m_print(timer, philo, "has taken a fork");
 		}
 		else
 		{
-			//msleep(2);
 			pthread_mutex_lock(philo->left_fork);
 			m_print(timer, philo, "has taken a fork");
 			pthread_mutex_lock(philo->right_fork);
@@ -283,18 +291,19 @@ void *eat_sleep_routine(void *arg)
 
 void free_thread(pthread_t **thread)
 {
-	free(&thread);
+	free(thread);
 }
 
 int main(int argc, char *argv[])
 {
+	t_settings *settings;
+	t_philo	*philos;
+
 	if (argc < 5)
 	{
 		printf("usage: <number_of_philos> <time_to_die> <time_to_eat> <time_to_sleep> <[number_of_times_each_philo_must_eat]>\n");
 	       	return 0;
 	}
-	t_settings *settings;
-       
 	settings = init_settings();
 	if (argc >= 5)
 	{
@@ -311,7 +320,7 @@ int main(int argc, char *argv[])
 	if (argc == 6)
 		settings->rounds = atoi(argv[5]);
 
-	t_philo *philos = calloc(settings->table->number_of_philos + 1, sizeof(t_philo));
+	philos = calloc(settings->table->number_of_philos + 1, sizeof(t_philo));
 	for (int i = 0; i <= settings->table->number_of_philos; i++)
 	{
 		philos[i].settings = settings;
