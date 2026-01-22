@@ -70,6 +70,17 @@ t_table	*init_table(void);
 t_philo *init_philo();
 t_philo *init_philos(int number_of_philos);
 
+int	check_argc(int argc)
+{
+	if (argc < 5 || argc > 6)
+	{
+		printf("usage: <number_of_philos> <time_to_die> <time_to_eat> <time_to_sleep>\
+ <[number_of_times_each_philo_must_eat]>\ntime is in ms\n");
+		return (0);
+	}
+	return (1);
+}
+
 int	check_number(char *av)
 {
 	int	i;
@@ -84,6 +95,26 @@ int	check_number(char *av)
 		}
 		i++;
 	}
+	return (1);
+}
+
+int	parse_argv(int argc, char *argv[], t_settings *settings)
+{
+	int	i;
+
+	i = 1;
+	while (i <= argc - 1)
+	{
+		if (!check_number(argv[i]))
+			return (0);
+		i++;
+	}
+	settings->table->number_of_philos = atoi(argv[1]);
+	settings->time_to_die = atoi(argv[2]);
+	settings->time_to_eat = atoi(argv[3]);
+	settings->time_to_sleep = atoi(argv[4]);
+	if (argc == 6)
+		settings->rounds = atoi(argv[5]);
 	return (1);
 }
 
@@ -116,6 +147,8 @@ t_table	*init_table(void)
 	table = calloc(1, sizeof(t_table));
 	return (table);
 }
+
+//void	init_philo(t_philo *philo,)
 
 void	free_philos(t_table *table)
 {
@@ -294,17 +327,22 @@ void free_thread(pthread_t **thread)
 	free(thread);
 }
 
-int main(int argc, char *argv[])
+int	main(int argc, char *argv[])
 {
 	t_settings *settings;
 	t_philo	*philos;
-
+	/*
 	if (argc < 5)
 	{
 		printf("usage: <number_of_philos> <time_to_die> <time_to_eat> <time_to_sleep> <[number_of_times_each_philo_must_eat]>\n");
 	       	return 0;
 	}
+	*/
+	if (!check_argc(argc))
+		return (0);
 	settings = init_settings();
+	philos = settings->philo;
+	/*
 	if (argc >= 5)
 	{
 		for (int i = 1; i <= argc - 1; i++)
@@ -317,10 +355,16 @@ int main(int argc, char *argv[])
 		settings->time_to_eat = atoi(argv[3]);
 		settings->time_to_sleep = atoi(argv[4]);
 	}
+	*/
+
+	if (!parse_argv(argc, argv, settings))
+		return (0);
+	/*
 	if (argc == 6)
 		settings->rounds = atoi(argv[5]);
-
-	philos = calloc(settings->table->number_of_philos + 1, sizeof(t_philo));
+	*/
+	//philos = calloc(settings->table->number_of_philos + 1, sizeof(t_philo));
+	philos = malloc(settings->table->number_of_philos * sizeof(t_philo));
 	for (int i = 0; i <= settings->table->number_of_philos; i++)
 	{
 		philos[i].settings = settings;
