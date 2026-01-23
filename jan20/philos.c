@@ -99,15 +99,6 @@ int check_number(char *av)
 	return 1;
 }
 
-/*
-void	*log_routine(void *arg)
-{
-	char* msg = (char*) arg;
-	printf("%s\n", msg);
-
-	return NULL;
-}
-*/
 
 t_settings *init_settings(void)
 {
@@ -148,6 +139,20 @@ long	now_ms(t_timer *timer)
 	return elapsed_ms;
 }
 
+// m for mutex
+// timestamp_in_ms X [msg]
+void	m_print(t_timer *timer, t_philo *philo, char *msg) 
+{
+	pthread_mutex_lock(&philo->global_m);
+	printf("%ld %d %s\n", now_ms(timer), philo->id, msg);
+	pthread_mutex_unlock(&philo->global_m);
+}
+
+void	msleep(int n)
+{
+	usleep(1000 * n);
+}
+
 void	*is_time_for_you_to_die(void *arg)
 {
 	t_settings *settings = (t_settings*) arg;
@@ -163,7 +168,7 @@ void	*is_time_for_you_to_die(void *arg)
 	//	printf("philo[%d]\n", settings->philo[i].id);
 	int j = 0;
 //	printf("time to die: %d\n", settings->)
-	// condition de variable au lieu d'1 while true
+	// **condition de variable au lieu d'1 while true**
 	while (true)
 	{
 		for (int i = 0; i < table->number_of_philos; i++)
@@ -184,7 +189,8 @@ void	*is_time_for_you_to_die(void *arg)
 			}
 			// return somethin ?
 		}
-		usleep(5000);
+		//usleep(5000);
+		msleep(9);
 		j++;
 	}
 	return (NULL);
@@ -192,6 +198,7 @@ void	*is_time_for_you_to_die(void *arg)
 
 /* TODO: separate cut down is_time_to_die in a function
  * that monitor routine will call
+ * monitor routine will call for each philo is_time_for_you to die
  * 
 void monitor_routine(void *arg)
 {
@@ -236,10 +243,13 @@ void *eat_sleep_routine(void *arg)
 			printf("%ld ms %d has taken a *right* fork[%d]\n", now_ms(timer), philo->id, ((philo->id) % table->number_of_philos));
 			pthread_mutex_unlock(&settings->m_log);
 		}
+		/*
 		pthread_mutex_lock(&settings->m_log);
 		printf("%ld ms %d starts eating\n", now_ms(timer), philo->id);
 		pthread_mutex_unlock(&settings->m_log);
-		usleep(philo->time_to_eat * 1000);
+		*/
+		//usleep(philo->time_to_eat * 1000);
+		msleep(philo->time_to_eat);
 		pthread_mutex_lock(&philo->global_m);
 		philo->has_eaten = true;
 		philo->last_meal = now_ms(timer);
@@ -249,7 +259,8 @@ void *eat_sleep_routine(void *arg)
 		pthread_mutex_unlock(philo->left_fork);
 
 		printf("%ld ms %d starts sleeping.\n", now_ms(timer), philo->id);
-		usleep(philo->time_to_sleep * 1000);
+//		usleep(philo->time_to_sleep * 1000);
+		msleep(philo->time_to_sleep);
 		printf("%ld ms %d is thinking.\n", now_ms(timer), philo->id);
 		i++;
 		pthread_mutex_lock(&settings->m_log);
