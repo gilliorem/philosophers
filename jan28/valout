@@ -1,0 +1,49 @@
+==4124694== Helgrind, a thread error detector
+==4124694== Copyright (C) 2007-2024, and GNU GPL'd, by OpenWorks LLP et al.
+==4124694== Using Valgrind-3.25.1 and LibVEX; rerun with -h for copyright info
+==4124694== Command: ./a.out 2 410 200 200 2
+==4124694== 
+==4124694== ---Thread-Announcement------------------------------------------
+==4124694== 
+==4124694== Thread #3 was created
+==4124694==    at 0x49A2A63: clone (clone.S:76)
+==4124694==    by 0x49A395E: __clone_internal (clone-internal.c:83)
+==4124694==    by 0x49116D8: create_thread (pthread_create.c:295)
+==4124694==    by 0x49121FF: pthread_create@@GLIBC_2.34 (pthread_create.c:828)
+==4124694==    by 0x485744E: pthread_create_WRK (hg_intercepts.c:449)
+==4124694==    by 0x4858D49: pthread_create@* (hg_intercepts.c:482)
+==4124694==    by 0x402227: start_simulation (philos.c:484)
+==4124694==    by 0x4023A6: main (philos.c:516)
+==4124694== 
+==4124694== ----------------------------------------------------------------
+==4124694== 
+==4124694== Thread #3: Exiting thread still holds 2 locks
+==4124694==    at 0x4911A66: start_thread (pthread_create.c:593)
+==4124694==    by 0x49A2A73: clone (clone.S:100)
+==4124694== 
+==4124694== ---Thread-Announcement------------------------------------------
+==4124694== 
+==4124694== Thread #1 is the program's root thread
+==4124694== 
+==4124694== ----------------------------------------------------------------
+==4124694== 
+==4124694== Thread #1: pthread_mutex_destroy of a locked mutex
+==4124694==    at 0x4853CD5: mutex_destroy_WRK (hg_intercepts.c:893)
+==4124694==    by 0x4859137: pthread_mutex_destroy (hg_intercepts.c:911)
+==4124694==    by 0x40177B: destroy_mutexes (philos.c:237)
+==4124694==    by 0x4023B3: main (philos.c:525)
+==4124694== 
+==4124694== ----------------------------------------------------------------
+==4124694== 
+==4124694== Thread #1's call to pthread_mutex_destroy failed
+==4124694==    with error code 16 (EBUSY: Device or resource busy)
+==4124694==    at 0x4853DA2: mutex_destroy_WRK (hg_intercepts.c:899)
+==4124694==    by 0x4859137: pthread_mutex_destroy (hg_intercepts.c:911)
+==4124694==    by 0x40177B: destroy_mutexes (philos.c:237)
+==4124694==    by 0x4023B3: main (philos.c:525)
+==4124694== 
+==4124694== 
+==4124694== Use --history-level=approx or =none to gain increased speed, at
+==4124694== the cost of reduced accuracy of conflicting-access information
+==4124694== For lists of detected and suppressed errors, rerun with: -s
+==4124694== ERROR SUMMARY: 5 errors from 3 contexts (suppressed: 2487 from 75)

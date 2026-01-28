@@ -6,7 +6,7 @@
 /*   By: regillio <regillio@student.42singapore.sg> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 10:40:26 by regillio          #+#    #+#             */
-/*   Updated: 2026/01/28 12:59:09 by regillio         ###   ########.fr       */
+/*   Updated: 2026/01/28 14:54:31 by regillio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,7 @@ typedef struct s_settings
 	bool	end;
 	pthread_mutex_t m_end;
 	pthread_mutex_t m_log;
+	pthread_mutex_t	m_meals;
 	pthread_t monitor;
 	t_table *table;
 	t_timer *timer;
@@ -151,6 +152,7 @@ t_settings	*init_settings(void)
 	settings->table = init_table();
 	pthread_mutex_init(&settings->m_end, NULL);
 	pthread_mutex_init(&settings->m_log, NULL);
+	pthread_mutex_init(&settings->m_meals, NULL);
 	settings->end = false;
 	while (i < settings->table->number_of_philos)
 	{
@@ -178,10 +180,10 @@ t_table	*init_table(void)
 	return (table);
 }
 
-long	now_ms(t_timer *timer)
+int	now_ms(t_timer *timer)
 {
-	long	elapsed_ms;
-	long	now_ms;
+	int	elapsed_ms;
+	int	now_ms;
 	struct	timeval now;
 	
 	gettimeofday(&now, NULL);
@@ -193,7 +195,7 @@ long	now_ms(t_timer *timer)
 void	m_print(t_timer *timer, t_philo *philo, char *msg) 
 {
 	pthread_mutex_lock(&philo->m_log);
-	printf("%ld %d %s\n", now_ms(timer), philo->id, msg);
+	printf("%d %d %s\n", now_ms(timer), philo->id, msg);
 	pthread_mutex_unlock(&philo->m_log);
 }
 
@@ -240,6 +242,7 @@ void	destroy_mutexes(t_settings *settings, t_philo *philos)
 	}
 	pthread_mutex_destroy(&settings->m_log);
 	pthread_mutex_destroy(&settings->m_end);
+	pthread_mutex_destroy(&settings->m_meals);
 }
 
 void	clean(t_settings *settings)
@@ -273,16 +276,32 @@ int	everyone_ate(t_settings *settings, int *round)
 {
 	if (!settings->six_argc)
 		return (0);
+	pthread_mutex_lock(&settings->m_meals);
 	if (settings->meals >= settings->table->number_of_philos)
 	{
 		*round+=1;
 		settings->meals = 0;
 	}
+	pthread_mutex_unlock(&settings->m_meals);
 	if (*round == settings->rounds)
 	{
+		pthread_mutex_lock(&settings->m_end);
 		settings->end = true;
+		pthread_mutex_unlock(&settings->m_end);
 		return (1);
 	}
+	return (0);
+}
+
+int	check_end(t_settings *settings)
+{
+	pthread_mutex_lock(&settings->m_end);
+	if (settings->end == true)
+	{
+		pthread_mutex_unlock(&settings->m_end);
+		return (1);
+	}
+	pthread_mutex_unlock(&settings->m_end);
 	return (0);
 }
 
@@ -294,7 +313,7 @@ void	*monitor_routine(void *arg)
        
 	settings = (t_settings*) arg;
 	round = 0;
-	while (settings->end == false)
+	while (!check_end(settings))
 	{
 		i = 0;
 		while (i < settings->table->number_of_philos)
@@ -382,8 +401,14 @@ void	ft_memcpy(void *dest, void *src, size_t n)
 void	set_resource(pthread_mutex_t *mutex, void *resource, void *status, size_t res_size)
 {
 	pthread_mutex_lock(mutex);
-	ft_memcpy(resource, status, sizeof(resource));	
+	ft_memcpy(resource, status, sizeof(res_size));
 	pthread_mutex_unlock(mutex);
+}
+
+void	drop_forks(t_philo *philo)
+{
+	pthread_mutex_unlock(philo->right_fork);	
+	pthread_mutex_unlock(philo->left_fork);	
 }
 
 void	eats(t_philo *philo)
@@ -391,7 +416,7 @@ void	eats(t_philo *philo)
 	t_settings	*settings;
 	t_timer	*timer;
 	t_table	*table;
-	long	tmp;
+	int	tmp;
 
 	settings = philo->settings;
 	table = settings->table;
@@ -401,28 +426,13 @@ void	eats(t_philo *philo)
 	takes_fork(philo);
 	m_print(timer, philo, "is eating");
 	msleep(philo->time_to_eat);
+	drop_forks(philo);
 	tmp = now_ms(timer);	
 	set_resource(&philo->m_last_meal, &philo->last_meal, &tmp, sizeof(tmp));
 	set_share_resource(&philo->m_has_eaten, &philo->has_eaten, true);
+	pthread_mutex_lock(&settings->m_meals);
 	settings->meals++;
-}
-
-void	drop_forks(t_philo *philo)
-{
-	pthread_mutex_unlock(philo->right_fork);	
-	pthread_mutex_unlock(philo->left_fork);	
-}
-
-int	check_end(t_settings *settings)
-{
-	pthread_mutex_lock(&settings->m_end);
-	if (settings->end == true)
-	{
-		pthread_mutex_unlock(&settings->m_end);
-		return (1);
-	}
-	pthread_mutex_unlock(&settings->m_end);
-	return (0);
+	pthread_mutex_unlock(&settings->m_meals);
 }
 
 void	*philo_routine(void *arg)
@@ -440,7 +450,6 @@ void	*philo_routine(void *arg)
 		eats(philo);
 		if (check_end(settings))
 			break;
-		drop_forks(philo);
 		m_print(philo->settings->timer, philo, "is sleeping");
 		msleep(philo->time_to_sleep);
 		if (check_end(settings))
