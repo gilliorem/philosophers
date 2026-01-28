@@ -1,94 +1,43 @@
-==================
-WARNING: ThreadSanitizer: data race (pid=4103003)
-  Write of size 4 at 0x7b2400000014 by thread T1 (mutexes: write M8, write M9):
-    #0 eats /home/regillio/Desktop/philos/jan28/philos.c:407 (a.out+0x2be8)
-    #1 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-  Previous read of size 4 at 0x7b2400000014 by thread T3:
-    #0 everyone_ate /home/regillio/Desktop/philos/jan28/philos.c:276 (a.out+0x2006)
-    #1 monitor_routine /home/regillio/Desktop/philos/jan28/philos.c:307 (a.out+0x2210)
-
-  As if synchronized via sleep:
-    #0 usleep ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:359 (libtsan.so.0+0x66547)
-    #1 msleep /home/regillio/Desktop/philos/jan28/philos.c:218 (a.out+0x1c00)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:403 (a.out+0x2b59)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-  Location is heap block of size 144 at 0x7b2400000000 allocated by main thread:
-    #0 calloc ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:672 (libtsan.so.0+0x31edc)
-    #1 init_settings /home/regillio/Desktop/philos/jan28/philos.c:149 (a.out+0x16f0)
-    #2 main /home/regillio/Desktop/philos/jan28/philos.c:495 (a.out+0x30c2)
-
-  Mutex M8 (0x7b1400000000) created at:
-    #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4240 (libtsan.so.0+0x53908)
-    #1 takes_fork /home/regillio/Desktop/philos/jan28/philos.c:354 (a.out+0x281b)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:401 (a.out+0x2b21)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-  Mutex M9 (0x7b1400000028) created at:
-    #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4240 (libtsan.so.0+0x53908)
-    #1 takes_fork /home/regillio/Desktop/philos/jan28/philos.c:356 (a.out+0x2855)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:401 (a.out+0x2b21)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-  Thread T1 (tid=4103005, running) created by main thread at:
-    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:969 (libtsan.so.0+0x605b8)
-    #1 start_simulation /home/regillio/Desktop/philos/jan28/philos.c:474 (a.out+0x2f84)
-    #2 main /home/regillio/Desktop/philos/jan28/philos.c:506 (a.out+0x31fa)
-
-  Thread T3 (tid=4103007, running) created by main thread at:
-    #0 pthread_create ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:969 (libtsan.so.0+0x605b8)
-    #1 start_simulation /home/regillio/Desktop/philos/jan28/philos.c:477 (a.out+0x2fd6)
-    #2 main /home/regillio/Desktop/philos/jan28/philos.c:506 (a.out+0x31fa)
-
-SUMMARY: ThreadSanitizer: data race /home/regillio/Desktop/philos/jan28/philos.c:407 in eats
-==================
-==================
-WARNING: ThreadSanitizer: destroy of a locked mutex (pid=4103003)
-    #0 pthread_mutex_destroy ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1244 (libtsan.so.0+0x39398)
-    #1 destroy_mutexes /home/regillio/Desktop/philos/jan28/philos.c:235 (a.out+0x1cd8)
-    #2 main /home/regillio/Desktop/philos/jan28/philos.c:515 (a.out+0x320d)
-
-  and:
-    #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4240 (libtsan.so.0+0x53908)
-    #1 takes_fork /home/regillio/Desktop/philos/jan28/philos.c:348 (a.out+0x27bf)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:401 (a.out+0x2b21)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-  Location is heap block of size 80 at 0x7b1400000000 allocated by main thread:
-    #0 calloc ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:672 (libtsan.so.0+0x31edc)
-    #1 main /home/regillio/Desktop/philos/jan28/philos.c:502 (a.out+0x31a0)
-
-  Mutex M8 (0x7b1400000000) created at:
-    #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4240 (libtsan.so.0+0x53908)
-    #1 takes_fork /home/regillio/Desktop/philos/jan28/philos.c:354 (a.out+0x281b)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:401 (a.out+0x2b21)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-SUMMARY: ThreadSanitizer: destroy of a locked mutex /home/regillio/Desktop/philos/jan28/philos.c:235 in destroy_mutexes
-==================
-==================
-WARNING: ThreadSanitizer: destroy of a locked mutex (pid=4103003)
-    #0 pthread_mutex_destroy ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:1244 (libtsan.so.0+0x39398)
-    #1 destroy_mutexes /home/regillio/Desktop/philos/jan28/philos.c:235 (a.out+0x1cd8)
-    #2 main /home/regillio/Desktop/philos/jan28/philos.c:515 (a.out+0x320d)
-
-  and:
-    #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4240 (libtsan.so.0+0x53908)
-    #1 takes_fork /home/regillio/Desktop/philos/jan28/philos.c:349 (a.out+0x27df)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:401 (a.out+0x2b21)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-  Location is heap block of size 80 at 0x7b1400000000 allocated by main thread:
-    #0 calloc ../../../../src/libsanitizer/tsan/tsan_interceptors_posix.cpp:672 (libtsan.so.0+0x31edc)
-    #1 main /home/regillio/Desktop/philos/jan28/philos.c:502 (a.out+0x31a0)
-
-  Mutex M9 (0x7b1400000028) created at:
-    #0 pthread_mutex_lock ../../../../src/libsanitizer/sanitizer_common/sanitizer_common_interceptors.inc:4240 (libtsan.so.0+0x53908)
-    #1 takes_fork /home/regillio/Desktop/philos/jan28/philos.c:356 (a.out+0x2855)
-    #2 eats /home/regillio/Desktop/philos/jan28/philos.c:401 (a.out+0x2b21)
-    #3 philo_routine /home/regillio/Desktop/philos/jan28/philos.c:440 (a.out+0x2d71)
-
-SUMMARY: ThreadSanitizer: destroy of a locked mutex /home/regillio/Desktop/philos/jan28/philos.c:235 in destroy_mutexes
-==================
-ThreadSanitizer: reported 3 warnings
+0 1 has taken a fork
+0 1 has taken a fork
+0 1 is eating
+200 1 is sleeping
+200 2 has taken a fork
+200 2 has taken a fork
+200 2 is eating
+401 1 is thinking
+401 2 is sleeping
+402 1 has taken a fork
+402 1 has taken a fork
+402 1 is eating
+601 2 is thinking
+602 1 is sleeping
+603 2 has taken a fork
+603 2 has taken a fork
+603 2 is eating
+802 1 is thinking
+803 2 is sleeping
+803 1 has taken a fork
+803 1 has taken a fork
+803 1 is eating
+1003 2 is thinking
+1004 1 is sleeping
+1006 2 has taken a fork
+1006 2 has taken a fork
+1006 2 is eating
+1204 1 is thinking
+1206 2 is sleeping
+1206 1 has taken a fork
+1206 1 has taken a fork
+1206 1 is eating
+1406 2 is thinking
+1406 1 is sleeping
+1409 2 has taken a fork
+1409 2 has taken a fork
+1409 2 is eating
+1607 1 is thinking
+1609 2 is sleeping
+1609 1 has taken a fork
+1609 1 has taken a fork
+1609 1 is eating
+end simulation
