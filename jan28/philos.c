@@ -6,7 +6,7 @@
 /*   By: regillio <regillio@student.42singapore.sg> +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/01/27 10:40:26 by regillio          #+#    #+#             */
-/*   Updated: 2026/01/28 07:47:15 by regillio         ###   ########.fr       */
+/*   Updated: 2026/01/28 12:59:09 by regillio         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,9 +17,6 @@
 #include <pthread.h>
 #include <stdbool.h>
 #include <string.h>
-
-/* ./philos number_of_philos time_to_die time_to_eat time_to_sleep [number_times_each_philo_must_eat] */
-/* prototypes of functions */
 
 typedef struct s_simulation t_simualation;
 typedef struct s_settings t_settings;
@@ -38,14 +35,12 @@ typedef struct s_settings
 	int	rounds; 
 	int	time_to_die;
 	int	time_to_eat;
-	int time_to_sleep;
-	pthread_mutex_t	m_meals;
+	int	time_to_sleep;
 	int meals;
 	bool	end;
-	pthread_mutex_t m_log;
 	pthread_mutex_t m_end;
+	pthread_mutex_t m_log;
 	pthread_t monitor;
-	pthread_t has_eaten_t;
 	t_table *table;
 	t_timer *timer;
 	t_philo *philo;
@@ -77,8 +72,7 @@ typedef struct s_philo
 	int t_last_meal;
 	int last_meal;
 	pthread_mutex_t m_last_meal;
-	pthread_mutex_t m_last_meal_two;
-	pthread_mutex_t global_m;
+	pthread_mutex_t	m_log;
 	bool	has_eaten;
 	pthread_mutex_t	m_has_eaten;
 	bool dead;
@@ -89,7 +83,7 @@ t_settings *init_settings(void);
 t_timer	*init_time(void);
 t_table	*init_table(void);
 t_philo *init_philos(int number_of_philos);
-void	start_simulation(int argc, t_settings *settings, t_philo *philos);
+void	start_simulation(t_settings *settings, t_philo *philos);
 void	end_simulation(void *arg);
 void	*philo_routine(void *arg);
 void	*monitor_routine(void *arg);
@@ -155,6 +149,7 @@ t_settings	*init_settings(void)
 	settings = calloc(1, sizeof(t_settings));
 	settings->timer = init_time();	
 	settings->table = init_table();
+	pthread_mutex_init(&settings->m_end, NULL);
 	pthread_mutex_init(&settings->m_log, NULL);
 	settings->end = false;
 	while (i < settings->table->number_of_philos)
@@ -183,19 +178,6 @@ t_table	*init_table(void)
 	return (table);
 }
 
-void	free_philos(t_table *table)
-{
-	int	i;
-
-	i = 0;
-	while (i < table->number_of_philos)
-	{
-		free (&table->philo[i]);
-		i++;
-	}
-	free(table->philo);
-}
-
 long	now_ms(t_timer *timer)
 {
 	long	elapsed_ms;
@@ -210,9 +192,9 @@ long	now_ms(t_timer *timer)
 
 void	m_print(t_timer *timer, t_philo *philo, char *msg) 
 {
-	pthread_mutex_lock(&philo->global_m);
+	pthread_mutex_lock(&philo->m_log);
 	printf("%ld %d %s\n", now_ms(timer), philo->id, msg);
-	pthread_mutex_unlock(&philo->global_m);
+	pthread_mutex_unlock(&philo->m_log);
 }
 
 void	m_died(t_timer *timer, t_philo *philo, char *msg)
@@ -226,9 +208,9 @@ void	m_died(t_timer *timer, t_philo *philo, char *msg)
 void	m_forklog(t_timer *timer, t_philo *philo, char *msg) 
 {
 	long now = now_ms(timer);
-	pthread_mutex_lock(&philo->global_m);
+	pthread_mutex_lock(&philo->m_log);
 	printf("%ld %d %s\n%ld %d %s\n", now, philo->id, msg, now, philo->id, msg);
-	pthread_mutex_unlock(&philo->global_m);
+	pthread_mutex_unlock(&philo->m_log);
 }
 
 void	msleep(int n)
@@ -243,47 +225,6 @@ void	m_end(t_settings *settings)
 	pthread_mutex_lock(&settings->m_log);
 }
 
-/*
-void	*has_everyone_eaten(void *arg)
-{
-	int		round;
-	t_settings	*settings;
-
-	round = 0;
-	settings = (t_settings*) arg;
-//	while (1)
-	while (settings->end == false)
-	{
-		//pthread_mutex_lock(&settings->m_log);
-//		printf("rounds:%d\nsettings rounds:%d\n",
-//			round, settings->rounds);
-		if (settings->meals >= settings->table->number_of_philos)
-		{
-			round++;
-			settings->meals = 0;
-		}
-		if (round == settings->rounds)
-		{
-			printf("IN\n");
-			//pthread_mutex_lock(&settings->m_log);
-			//printf("SIMULATION ENDS\n");
-			//settings->end = true;
-			m_end(settings);
-			return (NULL);
-			//pthread_mutex_unlock(&settings->m_log);
-//			end_simulation(settings, settings->philo);
-			//end_simulation(settings);
-			//printf("END SIM() RAN\n");
-			//end_simulation(6, settings, settings->philo);
-			//exit(EXIT_FAILURE);
-		}
-		//pthread_mutex_unlock(&settings->m_log);
-		msleep(1);
-	}
-	return (NULL);
-}
-*/
-
 void	destroy_mutexes(t_settings *settings, t_philo *philos)
 {
 	int	i;
@@ -292,10 +233,13 @@ void	destroy_mutexes(t_settings *settings, t_philo *philos)
 	while (i < settings->table->number_of_philos)
 	{
 		pthread_mutex_destroy(&settings->table->forks[i]);
-		pthread_mutex_destroy(&philos[i].global_m);
+		pthread_mutex_destroy(&philos[i].m_last_meal);
+		pthread_mutex_destroy(&philos[i].m_log);
+		pthread_mutex_destroy(&philos[i].m_has_eaten);
 		i++;
 	}
 	pthread_mutex_destroy(&settings->m_log);
+	pthread_mutex_destroy(&settings->m_end);
 }
 
 void	clean(t_settings *settings)
@@ -312,131 +256,16 @@ void	clean(t_settings *settings)
 	free(settings);
 }
 
-void	start_simulation(int argc, t_settings *settings, t_philo *philos)
+int	check_last_meal(t_settings *settings, t_philo *philo)
 {
-	t_table	*table;
-	int	i;
-	
-	i = 0;
-	table = settings->table;
-	table->forks = calloc(table->number_of_philos, sizeof(pthread_mutex_t));
-	while (i < table->number_of_philos)
-	{
-		pthread_mutex_init(&settings->table->forks[i], NULL);
-		i++;
-	}
-	printf("MUTEXES INIT\n");
-	i = 0;
-	while (i < settings->table->number_of_philos)
-	{
-		pthread_create(&philos[i].t, NULL, &philo_routine, &(philos[i]));
-		i++;
-	}
-	printf("PHILO THREADS CREATED\n");
-	pthread_create(&settings->monitor, NULL, &monitor_routine, settings);
-	printf("MONITOR THREAD CREATED\n");
-	//if (argc == 6)
-	//	pthread_create(&settings->has_eaten_t, NULL, &has_everyone_eaten, settings);
-	printf("HAS EATEN THREAD CREATED\n");
-	i = 0;
-	while (i < settings->table->number_of_philos)
-	{
-		pthread_join(philos[i].t, NULL);
-		i++;
-	}
-	printf("PHILO THREADS JOINED\n");
-	if (argc == 6)
-	pthread_join(settings->has_eaten_t, NULL);
-	pthread_join(settings->monitor, NULL);
-	destroy_mutexes(settings, settings->philo);
-	clean(settings);
-	printf("end of simulation\n");
-	exit(EXIT_SUCCESS);
-}
-
-void	end_simulation(void *arg)
-{
-	t_settings	*settings;
-	t_philo	*philos;
-	int	i;
-
-	i = 0;
-	settings = (t_settings *)arg;
-	philos = settings->philo;
-	while (i < settings->table->number_of_philos)
-	{
-		pthread_join(philos[i].t, NULL);
-		i++;
-	}
-	printf("PHILO THREADS JOINED\n");
-	//if (argc == 6)
-	//	pthread_join(settings->has_eaten_t, NULL);
-	// pthread_join(settings->monitor, NULL);
-	// destroy_mutexes(settings, settings->philo);
-	// clean(settings);
-	// printf("end of simulation\n");
-	// exit(EXIT_SUCCESS);
-}
-
-void	m_dead(t_settings *settings)
-{
-	pthread_mutex_lock(&settings->m_log);
-	settings->end = true;
-	pthread_mutex_unlock(&settings->m_log);
-}
-
-bool	is_time_to_die(void *arg, t_philo *philo)
-{
-	t_settings	*settings;
-	int	i;
-
-	settings = (t_settings*) arg;
-	settings = &(*settings);	
-	i = 0;
-	while (i < settings->table->number_of_philos)
-	{
-		pthread_mutex_lock(&settings->philo[i].global_m);
-		settings->philo[i].t_last_meal = now_ms(settings->timer) - settings->philo[i].last_meal;
-		pthread_mutex_unlock(&settings->philo[i].global_m);
-		if (settings->philo[i].t_last_meal > settings->philo[i].time_to_die)
-		{
-			m_print(settings->timer, &settings->philo[i], "died");
-			settings->philo[i].dead = true;
-			return (true);
-		}
-		i++;
-	}
-	return (false);
-}
-
-void	end_philo_threads(t_settings *settings, t_philo *philos)
-{
-	//printf("ending threads\n");
-	for (int i = 0; i < settings->table->number_of_philos; i++)
-	{
-		// printf("ending thread at address:%p\n", &philos[i].t);
-		pthread_join(philos[i].t, NULL);
-	}
-	//printf("all threads ended\n");
-}
-
-void	last_meal(t_settings *settings, t_philo *philo)
-{
-//	printf("**Last meal() philo address:%p\n", philo);
 	pthread_mutex_lock(&philo->m_last_meal);
 	philo->t_last_meal = now_ms(settings->timer) - philo->last_meal;
-	pthread_mutex_unlock(&philo->m_last_meal);
-}
-
-int	check_last_meal(t_philo *philo)
-{
-	pthread_mutex_lock(&philo->m_last_meal_two);
 	if (philo->t_last_meal > philo->time_to_die)
 	{
-		pthread_mutex_unlock(&philo->m_last_meal_two);
+		pthread_mutex_unlock(&philo->m_last_meal);
 		return (1);
 	}
-	pthread_mutex_unlock(&philo->m_last_meal_two);
+	pthread_mutex_unlock(&philo->m_last_meal);
 	return (0);
 }
 
@@ -450,60 +279,33 @@ int	everyone_ate(t_settings *settings, int *round)
 		settings->meals = 0;
 	}
 	if (*round == settings->rounds)
+	{
+		settings->end = true;
 		return (1);
+	}
 	return (0);
 }
 
 void	*monitor_routine(void *arg)
 {
 	t_settings *settings;
-	t_table	*table;
-	t_timer	*timer;
 	int	round;
 	int	i;
        
 	settings = (t_settings*) arg;
-	table = settings->table;
-	timer = settings->timer;
 	round = 0;
 	while (settings->end == false)
 	{
 		i = 0;
-		while (i < table->number_of_philos)
+		while (i < settings->table->number_of_philos)
 		{
-			/*
-			pthread_mutex_lock(&settings->philo[i].global_m);
-			settings->philo[i].t_last_meal = now_ms(timer) - settings->philo[i].last_meal;
-			thread_mutex_unlock(&settings->philo[i].global_m);
-			*/
-			//printf("**MONITOR_T: philo address: %p\n", &settings->philo[i]);
-			last_meal(settings, &settings->philo[i]);
-			//if (settings->philo[i].t_last_meal > settings->philo[i].time_to_die)
-			if (check_last_meal(&settings->philo[i]))
+			if (check_last_meal(settings, &settings->philo[i]))
 			{
-				m_died(timer, &settings->philo[i], "died");
+				m_died(settings->timer, &settings->philo[i], "died");
 				return (NULL);
 			}
-			/*
-			if (settings->six_argc == true)
-			{
-				if (settings->meals >= settings->table->number_of_philos)
-				{
-					round++;
-					settings->meals = 0;
-				}
-				if (round == settings->rounds)
-				{
-					settings->end = true;
-					return (NULL);
-				}
-			}
-			*/
 			if (everyone_ate(settings, &round))
-			{
-				settings->end = true;
 				return (NULL);
-			}
 			i++;
 		}
 		msleep(1);
@@ -524,9 +326,11 @@ void	init_philo(t_philo *philos, t_settings *settings)
 		philos[i].time_to_eat = settings->time_to_eat ;
 		philos[i].time_to_sleep = settings->time_to_sleep ;
 		philos[i].rounds = settings->rounds;
-		pthread_mutex_init(&philos[i].global_m, NULL);
 		philos[i].left_fork = &settings->table->forks[philos[i].id - 1];
 		philos[i].right_fork = &settings->table->forks[philos[i].id % settings->table->number_of_philos];
+		pthread_mutex_init(&philos[i].m_last_meal, NULL);
+		pthread_mutex_init(&philos[i].m_log, NULL);
+		pthread_mutex_init(&philos[i].m_has_eaten, NULL);
 		i++;
 	}
 }
@@ -577,7 +381,6 @@ void	ft_memcpy(void *dest, void *src, size_t n)
 
 void	set_resource(pthread_mutex_t *mutex, void *resource, void *status, size_t res_size)
 {
-	pthread_mutex_init(mutex, NULL);
 	pthread_mutex_lock(mutex);
 	ft_memcpy(resource, status, sizeof(resource));	
 	pthread_mutex_unlock(mutex);
@@ -598,14 +401,10 @@ void	eats(t_philo *philo)
 	takes_fork(philo);
 	m_print(timer, philo, "is eating");
 	msleep(philo->time_to_eat);
-	//pthread_mutex_lock(&settings->m_log);
-	//philo->last_meal = now_ms(timer);
 	tmp = now_ms(timer);	
 	set_resource(&philo->m_last_meal, &philo->last_meal, &tmp, sizeof(tmp));
 	set_share_resource(&philo->m_has_eaten, &philo->has_eaten, true);
-	//philo->has_eaten = true;
 	settings->meals++;
-	//pthread_mutex_unlock(&settings->m_log);
 }
 
 void	drop_forks(t_philo *philo)
@@ -630,19 +429,13 @@ void	*philo_routine(void *arg)
 {
 	t_philo	*philo;
 	t_settings	*settings;
-	t_table	*table;
 	int	i;
 
 	philo = (t_philo *)arg;
 	settings = philo->settings;
-	table = settings->table;
-	//philo->left_fork = &table->forks[philo->id - 1];
-	//philo->right_fork = &table->forks[philo->id % table->number_of_philos];
 	i = 1;
-	// while (settings->end == false)
 	while (!check_end(settings))
 	{
-		//philo->has_eaten = false;
 		set_share_resource(&philo->m_has_eaten, &philo->has_eaten, false);
 		eats(philo);
 		if (check_end(settings))
@@ -654,71 +447,49 @@ void	*philo_routine(void *arg)
 			break;
 		m_print(philo->settings->timer, philo, "is thinking");
 		i++;
+		msleep(1);
 	}
 	return (NULL);
 }
 
-/*
-void *eat_sleep_routine(void *arg)
+void	init_mutexes(t_settings *settings, pthread_mutex_t *mutex)
 {
-	t_philo *philo;
-	t_settings	*settings;
-	t_timer	*timer;
-	t_table	*table;
 	int	i;
-       
-	philo = (t_philo *) arg;
-	settings = philo->settings;
-	timer = settings->timer;
-	table = settings->table;
-	philo->left_fork = &table->forks[philo->id - 1];
-	philo->right_fork = &table->forks[philo->id % table->number_of_philos];
-	i = 1;
-	while (i <= philo->rounds || true)
+
+	i = 0;
+	while (i < settings->table->number_of_philos)
 	{
-		philo->has_eaten = false;
-		if (philo->id % 2 == 0)
-		{
-			msleep(1);
-			pthread_mutex_lock(philo->right_fork);
-			pthread_mutex_lock(philo->left_fork);
-			m_forklog(timer, philo, "has taken a fork");
-		}
-		else
-		{
-			pthread_mutex_lock(philo->left_fork);
-			m_print(timer, philo, "has taken a fork");
-			pthread_mutex_lock(philo->right_fork);
-			m_print(timer, philo, "has taken a fork");
-		}
-		takes_fork(philo);
-		m_print(timer, philo, "is eating");
-		msleep(philo->time_to_eat);
-		pthread_mutex_lock(&settings->m_log);
-		philo->last_meal = now_ms(timer);
-		philo->has_eaten = true;
-		settings->meals++;
-		pthread_mutex_unlock(&settings->m_log);
-		eats(philo);
-//		pthread_mutex_unlock(philo->right_fork);
-//		pthread_mutex_unlock(philo->left_fork);
-		drop_forks(philo);
-		m_print(timer, philo, "is sleeping");
-		msleep(philo->time_to_sleep);
-		m_print(timer, philo, "is thinking");
+		pthread_mutex_init(mutex, NULL);
 		i++;
 	}
-	return NULL;
 }
-*/
 
+void	start_simulation(t_settings *settings, t_philo *philo)
+{
+	int	i;
+
+	i = 0;
+	while (i < settings->table->number_of_philos)
+	{
+		pthread_create(&philo[i].t, NULL, &philo_routine, &philo[i]);	
+		i++;
+	}
+	pthread_create(&settings->monitor, NULL, &monitor_routine, settings);
+	pthread_join(settings->monitor, NULL);
+	i = 0;
+	while (i < settings->table->number_of_philos)
+	{
+		pthread_join(philo[i].t, NULL);
+		i++;
+	}
+}
 
 int	main(int argc, char *argv[])
 {
 	t_settings *settings;
 	t_table *table;
 	t_philo	*philos;
-//	pthread_t has_eaten_t;
+
 	if (!check_argc(argc))
 		return (0);
 	settings = init_settings();
@@ -730,45 +501,19 @@ int	main(int argc, char *argv[])
 	settings->philo = philos;
 	table->forks = calloc(table->number_of_philos, sizeof(pthread_mutex_t));
 	init_philo(philos, settings);	
-
-	for (int i = 0; i < settings->table->number_of_philos; i++)
-		pthread_mutex_init(&settings->table->forks[i], NULL);
-	for (int i = 0; i < settings->table->number_of_philos; i++)
-	{
-		pthread_create(&philos[i].t, NULL, &philo_routine, &(philos[i]));
-		//printf("philo thread address: %p\n", &philos[i].t);
-	}
-	pthread_create(&settings->monitor, NULL, &monitor_routine, settings);
-	//printf("thread monitor address:%p\n", &settings->monitor);
-	pthread_join(settings->monitor, NULL);
-	//printf("ended monitor thread:%p\n",  &settings->monitor);
-	end_philo_threads(settings, settings->philo);
-	//printf("ended philo threads\n");
-	
-	
-//	if (argc == 6)
-//		pthread_create(&has_eaten_t, NULL, &has_everyone_eaten, settings);
-	//start_simulation(argc, settings, philos);
-	//end_simulation(settings);
-	//for (int i = 0; i < table->number_of_philos; i++)
-	//	pthread_join(philos[i].t, NULL);
-	//printf("philo thread ended\n");
-	
-//	if (argc == 6)
-//		pthread_join(has_eaten_t, NULL);
-	//	pthread_join(settings->has_eaten_t, NULL);
-	//printf("has eaten thread ended\n");
-	//start_simulation(argc, settings, philos);
-	//if (settings->end == true)
-	//	end_simulation(argc, settings, philos);
+//	for (int i = 0; i < settings->table->number_of_philos; i++)
+//		pthread_mutex_init(&settings->table->forks[i], NULL);
+	start_simulation(settings, settings->philo);
+	/*
 	for (int i = 0; i < settings->table->number_of_philos; i++)
 	{
 		pthread_mutex_destroy(&settings->table->forks[i]);
-		pthread_mutex_destroy(&philos[i].global_m);
+		pthread_mutex_destroy(&philos[i].m_log);
 	}
-	pthread_mutex_destroy(&settings->m_log);
+//	pthread_mutex_destroy(&settings->m_log);
+	*/
 	destroy_mutexes(settings, philos);
 	printf("end simulation\n");
 	clean(settings);
-	return 0;
+	return (0);
 }
