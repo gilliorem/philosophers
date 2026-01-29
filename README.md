@@ -53,7 +53,7 @@ Someone dead ?
 - Operating Systems: Three Easy Pieces (Concurrency part)
 - GPT: Discussion on how to tackle the problem in a modular way. Examine and experiment solutions to avoid deadlock.
 ### VIDEO
-Code vault: Intro on thread and mutex use: [[https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2]]
+Code vault: Intro on thread and mutex use: `https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2`
 Jamshidbek Ergashev
 ### FELLOW 42 STUDENTS
 - chikoh helped me understand the project by visualizing it as in Overcook game.
