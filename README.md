@@ -3,10 +3,51 @@
 
 ## DESCRIPTION
 This project is an introduction to the use of threads and mutexes.
-Thread are processes that shared the same memory unit: they run 
-simultaneously or we say **concurently**.
+Thread is a unit of execution within a process.
+*wtf does that mean ?*
+
+It simply means that a process have one to many threads.
+Threads run simultaneously or we say **concurrently**.
+One program can execute multiple threads (concurrently), the `main()` being the #thread1
+Unlike sequence programming, thread-programming will not execute the code in sequence (one line after the other).
+The instructions run simultaneously (at the same time) (well not exactly), it actually depends on the OS scheduler.
+That means that it is out of your control.
+
+For instance, if you create 2 threads in your programm, at start, #thread2 can run before #thread1
+and the next time you run your program the OS scheduler might decide to run #thread1 first...
+"I thought that programming was deterministic."
+You were wrong.
 
 ![visual representation](https://www.iitk.ac.in/esc101/05Aug/tutorial/figures/essential/threads-two.gif)
+
+**Here are the key things you need to know to succeed in this assignment:**
+- One or more philosophers sit at a round table.
+There is a large bowl of spaghetti in the middle of the table.
+
+- The philosophers take turns eating, thinking, and sleeping.
+While they are eating, they are not thinking nor sleeping;
+while thinking, they are not eating nor sleeping;
+and, of course, while sleeping, they are not eating nor thinking
+
+ Since eating spaghetti with just one fork is impractical, a philosopher must pick up
+both the fork to their right and the fork to their left before eating.
+• When a philosopher has finished eating, they put their forks back on the table and
+start sleeping. Once awake, they start thinking again. The simulation stops when
+a philosopher dies of starvation.
+• Every philosopher needs to eat and should never starve.
+• Philosophers do not communicate with each other.
+• Philosophers do not know if another philosopher is about to die.
+• Needless to say, philosophers should avoid dying!
+
+*"Why the fuck do we need need threads to do this project ?"*
+
+Because philosophers are not like women, they can only do one thing at a time:
+they can either eat, sleep, or think.
+While a philosopher is eating for example, another one can be sleeping, so they can act in concurrency.
+One is doing something while anoother one is doing something else (which will prevent early death).
+And thread is making this possible.
+The difficulty of this simuation is that every philosopher can eat within `time_to_die` without dying.
+And they need 2 forks to eat.
 
 Thread (worker/philosopher/cooker) can be seen as a specific task executor. something that will execute the production pipeline.
 The main is part of the main thread
