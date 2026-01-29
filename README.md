@@ -1,10 +1,12 @@
 # PHILOSOPHERS
 *This project has been created as part of the 42 curriculum by regillio*
 
-## Description
+## DESCRIPTION
 This project is an introduction to the use of threads and mutexes.
-With shared resources
-A thread is the smallest unit of execution that the OS can schedule.
+Thread are processes that shared the same memory unit: they run 
+simultaneously or we say **concurently**.
+
+![visual representation](https://www.iitk.ac.in/esc101/05Aug/tutorial/figures/essential/threads-two.gif)
 
 Thread (worker/philosopher/cooker) can be seen as a specific task executor. something that will execute the production pipeline.
 The main is part of the main thread
@@ -53,14 +55,18 @@ Someone dead ?
 - Operating Systems: Three Easy Pieces (Concurrency part)
 - GPT: Discussion on how to tackle the problem in a modular way. Examine and experiment solutions to avoid deadlock.
 ### VIDEO
-Code vault: Intro on thread and mutex use: *https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2*
-Jamshidbek Ergashev
+- Code vault: Intro on thread and mutex use: *https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2*
+- Jamshidbek Ergashev: *https://www.youtube.com/watch?v=UGQsvVKwe90*
+- Oceano: *https://www.youtube.com/watch?v=zOpzGHwJ3MU&pp=ygUPcGhpbG9zb3BoZXJzIDQy2AaILQ%3D%3D*
 ### FELLOW 42 STUDENTS
 - chikoh helped me understand the project by visualizing it as in Overcook game.
 - wchoo offers me to read his code as reference
 - cedric helped managing routine's arguments and pass data around my program
 - yucchen helped me testing my program and checking my argc
 - ivho gave me great advices on how to earn living time by postponing the simulation
+
+### TEST AND COMPARE
+- mcombeau: *https://github.com/mcombeau/philosophers*
 
 ### HONORABLE MENTIONS
 - Romain Gilliot helped me draw a parralelism and offer me large explanations on multithreaded program like a web server.
