@@ -90,18 +90,13 @@ they move the report page to the "review pile" but since they were many pages so
 
 Thread-local resources (such as a worker’s own data or tools) do not require synchronization, but any resource accessed by multiple threads must be protected to avoid race conditions or deadlocks.
 
-## Instructions
-./a.out [nphilos] [timetodie] [timetoeat] [timetothink]
-./a.out 5 700 200 200 200
 
-
+### PROGRAM FLOW
 1. Parse the arguments
 	int input[5];
 	`for (int i = 1; i <= 5; i++) {input[i] = atoi(av[i])}`
 
-2. Timeconversion
-
-3. Routine
+2. Routines
 	 | 		|
 	odd		even
 
@@ -109,11 +104,20 @@ Thread-local resources (such as a worker’s own data or tools) do not require s
 	eat				| other philos are thinking|sleeping
 	put back fork			
 
-3.1 Time module
-start; routine; usleep(timetoroutine); end 
-	
-3.2 Monitor (the reaper/watchdog/monitor/server)
-Someone dead ?
+4. Time module
+	`now_ms = (now.tv_sec * 1000) + (now.tv_usec / 1000);`
+5. Monitor 
+Looking up for ending the simulation when needed (in two cases):
+Constantly checking if someone is dead and has everyone eaten yet?
+
+## Instructions
+- go in philo/
+- run `make`
+
+`./philo <number_of_philosophers> <time_to_die> <time_to_eat> <time_to_sleep> [<number_of_times_each_philosopher_must_eat>]`
+`./philo 5 800 200 200 7`
+
+
 ## RESOURCES
 ### READING AND DOCUMENTATION
 - Function Manuals - `gettimeofday - pthread_create - pthread_mutex_lock`
