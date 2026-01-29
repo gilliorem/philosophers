@@ -41,22 +41,30 @@ a philosopher dies of starvation.
 - Philosophers do not know if another philosopher is about to die.
 - Needless to say, philosophers should avoid dying!
 
-*"Why the fuck do we need need threads to do this project ?"*
+*"Why the fuck do we even need threads to do this project ?"*
 
-Because philosophers are not like women, they can only do one thing at a time:
-they can either eat, sleep, or think.
-While a philosopher is eating for example, another one can be sleeping, so they can act in concurrency.
-One is doing something while anoother one is doing something else (which will prevent early death).
-And thread is making this possible.
-The difficulty of this simuation is that every philosopher can eat within `time_to_die` without dying.
-And they need 2 forks to eat.
+Because philosophers are not like women, they can only do one thing at the same time:
+and to prevent death, they will need to do things *synchronously*.
+ 
+While a philosopher is eating for example, another one might be sleeping or thinking.
+Multithreading is making this possible.
+The difficulty is that every philosopher needs to eat within `time_to_die` holding two forks.
 
-Thread (worker/philosopher/cooker) can be seen as a specific task executor. something that will execute the production pipeline.
-The main is part of the main thread
-One example is "printing"
-to print, we need :a printer (which is the fork)
-and the workers can print 5 times, but that means that they will have to "queue" because the printer is a shared resource. one at a time. and it is a prequirement 
-though, while not printing, our worker (philosophers) can do something else simultanously: (think or sleep) 
+Now,
+When I first started, at this point in the project, **I had no fucking clue of what I was suppose to do**. Even though I roughly understand how threads can work together,
+regarding the *dining philosophers* problem, I didn't know what to do.
+
+So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
+Thread (worker/philosopher/cooker) can be seen as a specific task executor. something that will execute a task in a *production pipeline*
+For example is "printing"
+to print, we need :a printer (which is the Thread)
+if we have 5 printers we can print 5 different document in the same time
+Now in printer there is ink.
+Let's say that the 5 printers share the same ink
+In order to have the correct color-printed-document, each printer must pick the correct amount of ink as they print.
+so they will need to "lock ink black and blue for example", take the right amount and print and "unlock".
+if we dont lock, we might endup having a document with 5 colors instead of one
+though, while not printing, it can do something else: cleaning...
 
 back to the printer/writer.
 the sharable resource can be a printer and the local sharable resource (yes, another one, can be the pen.).
