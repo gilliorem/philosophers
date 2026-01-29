@@ -1,4 +1,16 @@
-#include "philos.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   monitor.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: regillio <regillio@student.42singapore.sg> +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 07:51:30 by regillio          #+#    #+#             */
+/*   Updated: 2026/01/29 07:52:48 by regillio         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/philos.h"
 
 int	check_last_meal(t_settings *settings, t_philo *philo)
 {
@@ -20,7 +32,7 @@ int	everyone_ate(t_settings *settings, int *round)
 	pthread_mutex_lock(&settings->m_meals);
 	if (settings->meals >= settings->table->number_of_philos)
 	{
-		*round+=1;
+		*round += 1;
 		settings->meals = 0;
 	}
 	pthread_mutex_unlock(&settings->m_meals);
@@ -48,11 +60,11 @@ int	check_end(t_settings *settings)
 
 void	*monitor_routine(void *arg)
 {
-	t_settings *settings;
-	int	round;
-	int	i;
-       
-	settings = (t_settings*) arg;
+	t_settings	*settings;
+	int			round;
+	int			i;
+
+	settings = (t_settings *) arg;
 	round = 0;
 	while (!check_end(settings))
 	{

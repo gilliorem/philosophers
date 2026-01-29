@@ -1,4 +1,16 @@
-#include "philos.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   clean.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: regillio <regillio@student.42singapore.sg> +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 07:44:54 by regillio          #+#    #+#             */
+/*   Updated: 2026/01/29 07:45:16 by regillio         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/philos.h"
 
 void	destroy_mutexes(t_settings *settings, t_philo *philos)
 {
@@ -21,7 +33,7 @@ void	destroy_mutexes(t_settings *settings, t_philo *philos)
 void	clean(t_settings *settings)
 {
 	t_table	*table;
-	t_philo *philo;
+	t_philo	*philo;
 
 	philo = settings->philo;
 	table = settings->table;

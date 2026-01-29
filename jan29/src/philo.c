@@ -1,9 +1,21 @@
-#include "philos.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   philo.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: regillio <regillio@student.42singapore.sg> +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 07:55:35 by regillio          #+#    #+#             */
+/*   Updated: 2026/01/29 10:17:15 by regillio         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/philos.h"
 
 void	takes_fork(t_philo *philo)
 {
 	t_settings	*settings;
-	t_timer	*timer;
+	t_timer		*timer;
 
 	settings = philo->settings;
 	timer = settings->timer;
@@ -25,27 +37,25 @@ void	takes_fork(t_philo *philo)
 
 void	drop_forks(t_philo *philo)
 {
-	pthread_mutex_unlock(philo->right_fork);	
-	pthread_mutex_unlock(philo->left_fork);	
+	pthread_mutex_unlock(philo->right_fork);
+	pthread_mutex_unlock(philo->left_fork);
 }
 
 void	eats(t_philo *philo)
 {
 	t_settings	*settings;
-	t_timer	*timer;
-	t_table	*table;
-	int	tmp;
+	t_timer		*timer;
+	t_table		*table;
+	int			tmp;
 
 	settings = philo->settings;
 	table = settings->table;
-	philo->left_fork = &table->forks[philo->id - 1];
-	philo->right_fork = &table->forks[philo->id % table->number_of_philos];
 	timer = settings->timer;
 	takes_fork(philo);
 	m_print(timer, philo, "is eating");
 	msleep(philo->time_to_eat);
 	drop_forks(philo);
-	tmp = now_ms(timer);	
+	tmp = now_ms(timer);
 	set_resource(&philo->m_last_meal, &philo->last_meal, &tmp, sizeof(tmp));
 	set_share_resource(&philo->m_has_eaten, &philo->has_eaten, true);
 	pthread_mutex_lock(&settings->m_meals);
@@ -66,9 +76,9 @@ int	lonely_philo(t_settings *settings, t_philo *philo)
 
 void	*philo_routine(void *arg)
 {
-	t_philo	*philo;
 	t_settings	*settings;
-	int	i;
+	t_philo		*philo;
+	int			i;
 
 	philo = (t_philo *)arg;
 	settings = philo->settings;
@@ -77,14 +87,14 @@ void	*philo_routine(void *arg)
 	{
 		set_share_resource(&philo->m_has_eaten, &philo->has_eaten, false);
 		if (lonely_philo(settings, philo))
-			break;
+			break ;
 		eats(philo);
 		if (check_end(settings))
-			break;
+			break ;
 		m_print(philo->settings->timer, philo, "is sleeping");
 		msleep(philo->time_to_sleep);
 		if (check_end(settings))
-			break;
+			break ;
 		m_print(philo->settings->timer, philo, "is thinking");
 		i++;
 		msleep(1);

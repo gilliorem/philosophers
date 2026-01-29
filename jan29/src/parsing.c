@@ -1,4 +1,16 @@
-#include "philos.h"
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   parsing.c                                          :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: regillio <regillio@student.42singapore.sg> +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/01/29 07:52:58 by regillio          #+#    #+#             */
+/*   Updated: 2026/01/29 07:53:32 by regillio         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+#include "../include/philos.h"
 
 int	check_argc(int argc)
 {
@@ -14,7 +26,7 @@ int	check_argc(int argc)
 int	check_number(char *av)
 {
 	int	i;
-	
+
 	i = 0;
 	while (av[i])
 	{
