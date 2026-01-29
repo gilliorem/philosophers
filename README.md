@@ -1,7 +1,7 @@
-#PHILOSOPHERS
+# PHILOSOPHERS
 *This project has been created as part of the 42 curriculum by regillio*
 
-##Description
+## Description
 This project is an introduction to the use of threads and mutexes.
 With shared resources
 A thread is the smallest unit of execution that the OS can schedule.
@@ -19,7 +19,7 @@ so there are two types of shareable resource. local and general.
 since it is sharable, we have to apply a mutex to this resource. yes, we dont want two philos writing on the same time: then we will have some non sens being printed.
 like instead of printing "hello world", "hworldllo" could be printed. 
 
-##Instructions
+## Instructions
 ./a.out [nphilos] [timetodie] [timetoeat] [timetothink]
 ./a.out 5 700 200 200 200
 
@@ -46,23 +46,23 @@ start; routine; usleep(timetoroutine); end
 	
 3.2 Monitor (the reaper/watchdog/monitor/server)
 Someone dead ?
-##Resources
-###READING AND DOCUMENTATION
+## RESOURCES
+### READING AND DOCUMENTATION
 Function Manuals - `gettimeofday - pthread_create - pthread_mutex_lock`
 Stack overflow: Found an interesting discussion expressing different ways to use time related functionnalities in C.
 Operating Systems: Three Easy Pieces (Concurrency part)
 GPT: Discussion on how to tackle the problem in a modular way. Examine and experiment solutions to avoid deadlock.
-###Video
+### VIDEO
 Code vault: Intro on thread and mutex use
 Jamshidbek Ergashev
-###Fellow 42 students
+### FELLOW 42 STUDENTS
 - chikoh helped me understand the project by visualizing it as in Overcook game.
 - wchoo offers me to read his code as reference
 - cedric helped managing routine's arguments and pass data around my program
 - yucchen helped me testing my program and checking my argc
 - ivho gave me great advices on how to earn living time by postponing the simulation
 
-###Honorable mentions
+### HONORABLE MENTIONS
 - Romain Gilliot helped me draw a parralelism and offer me large explanations on multithreaded program like a web server.
 He also helped me cut down layers of abstraction to a small working prototype which introduce a lot of Object Oriented Programming.
 Which I think this is a better way to represent the simulation.
