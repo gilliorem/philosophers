@@ -29,15 +29,17 @@ While they are eating, they are not thinking nor sleeping;
 while thinking, they are not eating nor sleeping;
 and, of course, while sleeping, they are not eating nor thinking
 
- Since eating spaghetti with just one fork is impractical, a philosopher must pick up
+- Since eating spaghetti with just one fork is impractical, a philosopher must pick up
 both the fork to their right and the fork to their left before eating.
-• When a philosopher has finished eating, they put their forks back on the table and
+
+- When a philosopher has finished eating, they put their forks back on the table and
 start sleeping. Once awake, they start thinking again. The simulation stops when
 a philosopher dies of starvation.
-• Every philosopher needs to eat and should never starve.
-• Philosophers do not communicate with each other.
-• Philosophers do not know if another philosopher is about to die.
-• Needless to say, philosophers should avoid dying!
+
+- Every philosopher needs to eat and should never starve.
+- Philosophers do not communicate with each other.
+- Philosophers do not know if another philosopher is about to die.
+- Needless to say, philosophers should avoid dying!
 
 *"Why the fuck do we need need threads to do this project ?"*
 
