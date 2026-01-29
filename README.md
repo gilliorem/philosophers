@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    README.md                                          :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: regillio <marvin@42.fr>                    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/01/29 13:21:32 by regillio          #+#    #+#              #
+#    Updated: 2026/01/29 13:22:58 by regillio         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 # PHILOSOPHERS
 *This project has been created as part of the 42 curriculum by regillio*
 
@@ -57,14 +69,15 @@ regarding the *dining philosophers* problem, I didn't know what to do.
 So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
 Thread (worker/philosopher/cooker) can be seen as a specific task executor. something that will execute a task in a *production pipeline*
 For example is "printing"
-to print, we need :a printer (which is the Thread)
-if we have 5 printers we can print 5 different document in the same time
-Now in printer there is ink.
-Let's say that the 5 printers share the same ink
-In order to have the correct color-printed-document, each printer must pick the correct amount of ink as they print.
-so they will need to "lock ink black and blue for example", take the right amount and print and "unlock".
-if we dont lock, we might endup having a document with 5 colors instead of one
-though, while not printing, it can do something else: cleaning...
+to print, we need: a printer (which is the a shared resource)
+if you and Karen, your colleague, who loves to print shit tone of documents, try to print a a 30-pages report document at the same time, you might end up with Karen's random document in your report.
+This is because the printer what configure a certain way to handhle multiple impressions coming at the same time.
+(printer driver as so much more complex to configure than you think) here: 'https://www.youtube.com/watch?v=IXBC85SGC0Q'
+Here is some cases that can happen:
+- the printer might don't do print anything (deadlock) or you might (DEADLOCK)
+- missing one page
+- having a document that you didn't print in your report (wrong management of shared resource): 
+*every time I receive something to print, I print it* 
 
 back to the printer/writer.
 the sharable resource can be a printer and the local sharable resource (yes, another one, can be the pen.).
