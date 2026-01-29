@@ -61,17 +61,34 @@ to print, we need: a printer (which is the a shared resource)
 if you and Karen, your colleague, who loves to print shit tone of documents, try to print a a 30-pages report document at the same time, you might end up with Karen's random document in your report.
 This is because the printer what configure a certain way to handhle multiple impressions coming at the same time.
 (printer driver as so much more complex to configure than you think) here: 'https://www.youtube.com/watch?v=IXBC85SGC0Q'
-Here is some cases that can happen:
-- the printer might don't do print anything (deadlock) or you might (DEADLOCK)
-- missing one page
+
+Here is the main things than can happen:
+
+### DEADLOCK
+- the printer might don't do print anything (*DEADLOCK*)
+- You lock ink
+- Karen locks paper
+- You wait for paper
+- Karen waits for ink
+- → nobody prints, forever
+
 - having a document that you didn't print in your report (wrong management of shared resource): 
 *every time I receive something to print, I print it* 
 
-back to the printer/writer.
-the sharable resource can be a printer and the local sharable resource (yes, another one, can be the pen.).
-so there are two types of shareable resource. local and general.
-since it is sharable, we have to apply a mutex to this resource. yes, we dont want two philos writing on the same time: then we will have some non sens being printed.
-like instead of printing "hello world", "hworldllo" could be printed. 
+### RACE CONDTION
+Before printing your report, you want somebody to go through, to make sure everything is correct.
+your report is long so you ask a second person to go through.
+You endup having pages that have been review twice because your workers didn't coordinate properly together. 
+and other not being review at all.
+and at some point, of them put a none review page on top of the review pile because he thought you had review it! 
+they move the report page to the "review pile" but since they were many pages some got into this pile without being review.
+- Both workers read it at the same time (say it’s 10)
+- Both decide to review page 10
+- Both increment it to 11
+- Result: page 11 gets skipped, page 10 reviewed twice
+- Last page will never get review
+
+Thread-local resources (such as a worker’s own data or tools) do not require synchronization, but any resource accessed by multiple threads must be protected to avoid race conditions or deadlocks.
 
 ## Instructions
 ./a.out [nphilos] [timetodie] [timetoeat] [timetothink]
@@ -79,13 +96,10 @@ like instead of printing "hello world", "hworldllo" could be printed.
 
 
 1. Parse the arguments
-*for simplicity sake and because I do what I want, I am going to turn every argument to an int* 
 	int input[5];
 	`for (int i = 1; i <= 5; i++) {input[i] = atoi(av[i])}`
-	
-2. Timeconversion ?
-	Do we need to turn the timevalues into times, or we can just use them as int ?
-	lets pretend we can use them as int for now.
+
+2. Timeconversion
 
 3. Routine
 	 | 		|
