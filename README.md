@@ -55,19 +55,26 @@ at this point in the project, **I had no fucking clue of what I was suppose to d
 regarding the *dining philosophers* problem, I didn't know what to do.
 
 So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
-A Thread (worker/philosopher/cooker) can be represented as a specific worker. someone that will execute a task in the *production pipeline*
-Let's say you are an office worker that needs to use the printer 
-if your colleague Karen, who loves to print shit tone of document pages, is printing in the same time as you are trying to print a 100-pages-report, things could go wrong...
-
-Here is the main things than can happen:
+Let's say that a thread is a Writer, and there is one marker.
+You hold the marker, you write.
+You releise the marker.
+if someone else want to write, he needs to holds the marker, write, reliese.
 
 ### DEADLOCK
-- the printer might don't print anything (*DEADLOCK*)
-- You lock ink
-- Karen locks paper
-- You wait for paper
-- Karen waits for ink
-- → nobody prints, forever
+- You hold the pen
+- Someone hold the eraser
+- You wait for the eraser
+- The other guy waits for the pen
+- → nobody writes, forever *waiting for a shared resource to be releised*
+
+Note that in this example one shared resource is the pen and another one is the eraser.
+It can be the same that resource that is being shared.
+
+In philosophers, the shared resource is the fork: a philosopher needs 2 forks to eat.
+Picture this: 2 philos sit at a *round* table. there are 2 forks. (yes they share their forks... I guess they didnt care about covid backthen)
+If they both pick their *left* fork first in the same time, they will never be able to pick up the second fork.
+Since it is a round table, they are facing each other: one's left fork is the right fork of the other.
+It is not to important at the begining of the project to worry about deadlock, eventually, as the program gets more complex, deadlock will happen and it will become easier to visualize what's happening.
 
 ### RACE CONDTION
 Before printing your report, you want somebody to go through, to make sure everything is correct.
@@ -105,11 +112,17 @@ Looking up for ending the simulation when needed (in two cases):
 Constantly checking if someone is dead and has everyone eaten yet?
 
 ## Instructions
-- go in philo/
-- run `make`
+- go in `philo/`
+```bash
+make
+```
 
-`./philo <number_of_philosophers> <time_to_die> <time_to_eat> <time_to_sleep> [<number_of_times_each_philosopher_must_eat>]`
-`./philo 5 800 200 200 7`
+```bash
+./philo <number_of_philosophers> <time_to_die> <time_to_eat> <time_to_sleep> [<number_of_times_each_philosopher_must_eat>]
+```
+```bash
+./philo 5 800 200 200 7`
+```
 
 
 ## RESOURCES
@@ -121,7 +134,10 @@ Constantly checking if someone is dead and has everyone eaten yet?
 ### VIDEO
 - Code vault: Intro on thread and mutex use: *https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2*
 - Jamshidbek Ergashev: *https://www.youtube.com/watch?v=UGQsvVKwe90*
-- Oceano: *https://www.youtube.com/watch?v=zOpzGHwJ3MU&pp=ygUPcGhpbG9zb3BoZXJzIDQy2AaILQ%3D%3D*
+- Chris Kanich, Deadlock in 3 minutes: *https://www.youtube.com/watch?v=oEbXlSH8hyE&pp=ygUfdGhyZWFkIGRlYWRsb2NrIGFuaW1hdGlvbiB0cmFpbtgGB9IHCQl8CgGHKiGM7w%3D%3D*
+- Oceano: - *https://www.youtube.com/watch?v=zOpzGHwJ3MU&pp=ygUPcGhpbG9zb3BoZXJzIDQy2AaILQ%3D%3D*
+	- Threads and Race condtions: *https://www.youtube.com/watch?v=mvZKu0DfFLQ*
+	- Deadlock:* https://www.youtube.com/watch?v=rFYYifVj5gs*
 ### FELLOW 42 STUDENTS
 - chikoh helped me understand the project by visualizing it as in Overcook game.
 - wchoo offers me to read his code as reference
