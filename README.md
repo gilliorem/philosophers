@@ -90,13 +90,70 @@ they move the report page to the "review pile" but since they were many pages so
 - Last page will never get review
 
 Thread-local resources (such as a worker’s own data or tools) do not require synchronization, but any resource accessed by multiple threads must be protected to avoid race conditions or deadlocks.
+If this explanation isn't clear enough, check Code Vault videos and Oceano's.
 
+### STRUCTURE
+Let's represent the elements we have in the simulation and try to run our first multithreaded program.
+Since the whole program is a *simulation*, I find it good to use *Object Oriented* approach to represent the different elements of our program.
+For instance, there is no such type as *philo* or *fork*... That's why it can be tricky and hard to visualize what is going on at a *C* level.
+Representing those elements using structs is helpfull to better understand what is happening.
+
+So we have
+- a Table
+- Philosophers
+- a Timer
+
+*Let's not worry so much about the elements, for now, the idea is just to have a program runing for now !*
+
+```C
+typedef struct s_table
+{
+	int	number_of_philos;
+	t_philo *philos;	
+} t_table;
+typedef struct s_philo
+{
+	int id;
+	int time_to_eat;
+	int time_to_sleep;
+	pthread_t t;
+} t_philo;
+typedef struct s_timer
+{
+	int now;
+	int elapsed_time;
+}
+
+void *philo_routine(void *arg)
+{
+	t_philo *philo = (t_philo*) arg;
+	
+	while (1)
+	{
+		printf("philo %d eats", philo->id);
+		usleep(philo->time_to_eat * 1000);
+		printf("philo %d sleeps", philo->id);
+		usleep(philo->time_to_sleep * 1000);
+	}
+}
+
+int main()
+{
+	t_table *table = init_table();
+	init_elements(table);
+	
+	for (int i = 0; i < 2; i++)
+		pthread_create(&table->philo[i].t, NULL, &philo_routine, &philo[i]);
+	for (int i = 0; i < 2; i++)
+		pthread_join(table->philo[i].t, NULL);
+}
+```
 
 ### PROGRAM FLOW
-1. Parse the arguments
+1. Parse the argument
 	int input[5];
 	`for (int i = 1; i <= 5; i++) {input[i] = atoi(av[i])}`
-
+We are going to compare these values against time, which is why we turn this into numeric values.
 2. Routines
 	 | 		|
 	odd		even
