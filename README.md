@@ -48,12 +48,12 @@ start; routine; usleep(timetoroutine); end
 Someone dead ?
 ## RESOURCES
 ### READING AND DOCUMENTATION
-Function Manuals - `gettimeofday - pthread_create - pthread_mutex_lock`
-Stack overflow: Found an interesting discussion expressing different ways to use time related functionnalities in C.
-Operating Systems: Three Easy Pieces (Concurrency part)
-GPT: Discussion on how to tackle the problem in a modular way. Examine and experiment solutions to avoid deadlock.
+- Function Manuals - `gettimeofday - pthread_create - pthread_mutex_lock`
+- Stack overflow: Found an interesting discussion expressing different ways to use time related functionnalities in C.
+- Operating Systems: Three Easy Pieces (Concurrency part)
+- GPT: Discussion on how to tackle the problem in a modular way. Examine and experiment solutions to avoid deadlock.
 ### VIDEO
-Code vault: Intro on thread and mutex use
+Code vault: Intro on thread and mutex use: [[https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2]]
 Jamshidbek Ergashev
 ### FELLOW 42 STUDENTS
 - chikoh helped me understand the project by visualizing it as in Overcook game.
