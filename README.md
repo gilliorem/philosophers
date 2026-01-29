@@ -4,17 +4,17 @@
 ## DESCRIPTION
 This project is an introduction to the use of threads and mutexes.
 Thread is a unit of execution within a process.
-*wtf does that mean ?*
+*What does that mean ?*
 
-It simply means that a process have one to many threads.
-Threads run simultaneously or we say **concurrently**.
-One program can execute multiple threads (concurrently), the `main()` being the #thread1
-Unlike sequence programming, thread-programming will not execute the code in sequence (one line after the other).
-The instructions run simultaneously (at the same time) (well not exactly), it actually depends on the OS scheduler.
-That means that it is out of your control.
+A process has [1] to [many] threads
+Threads run simultaneously.
+One program can execute multiple threads (concurrently), the `main()` being the #thread1.
+Unlike sequence programming, thread-programming will not execute the code in sequence (top down).
+The instructions run synchronously (well not exactly), it depends on the OS scheduler.
+That means that it is out of our control.
 
-For instance, if you create 2 threads in your programm, at start, #thread2 can run before #thread1
-and the next time you run your program the OS scheduler might decide to run #thread1 first...
+For instance, if we create 2 threads in our programm, #thread2 can run before #thread1
+and, the next the program run, the OS scheduler might decide to run #thread1 first...
 "I thought that programming was deterministic."
 You were wrong.
 
@@ -41,39 +41,33 @@ a philosopher dies of starvation.
 - Philosophers do not know if another philosopher is about to die.
 - Needless to say, philosophers should avoid dying!
 
-*"Why the fuck do we even need threads to do this project ?"*
+*"Why the f do we even need threads to do this project ?"*
 
-Because philosophers are not like women, they can only do one thing at the same time:
-and to prevent death, they will need to do things *synchronously*.
+Because philosophers aren't like women, they can do only one thing at the same time.
+And, to prevent death, they will need to do things *synchronously*.
  
-While a philosopher is eating for example, another one might be sleeping or thinking.
+While a philosopher is eating, another one might be sleeping or thinking.
 Multithreading is making this possible.
 The difficulty is that every philosopher needs to eat within `time_to_die` holding two forks.
 
 Now,
-When I first started, at this point in the project, **I had no fucking clue of what I was suppose to do**. Even though I roughly understand how threads can work together,
+at this point in the project, **I had no fucking clue of what I was suppose to do**. Even though I roughly understand how threads can work together,
 regarding the *dining philosophers* problem, I didn't know what to do.
 
 So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
-Thread (worker/philosopher/cooker) can be seen as a specific task executor. something that will execute a task in a *production pipeline*
-For example is "printing"
-to print, we need: a printer (which is the a shared resource)
-if you and Karen, your colleague, who loves to print shit tone of documents, try to print a a 30-pages report document at the same time, you might end up with Karen's random document in your report.
-This is because the printer what configure a certain way to handhle multiple impressions coming at the same time.
-(printer driver as so much more complex to configure than you think) here: 'https://www.youtube.com/watch?v=IXBC85SGC0Q'
+A Thread (worker/philosopher/cooker) can be represented as a specific worker. someone that will execute a task in the *production pipeline*
+Let's say you are an office worker that needs to use the printer 
+if your colleague Karen, who loves to print shit tone of document pages, is printing in the same time as you are trying to print a 100-pages-report, things could go wrong...
 
 Here is the main things than can happen:
 
 ### DEADLOCK
-- the printer might don't do print anything (*DEADLOCK*)
+- the printer might don't print anything (*DEADLOCK*)
 - You lock ink
 - Karen locks paper
 - You wait for paper
 - Karen waits for ink
 - → nobody prints, forever
-
-- having a document that you didn't print in your report (wrong management of shared resource): 
-*every time I receive something to print, I print it* 
 
 ### RACE CONDTION
 Before printing your report, you want somebody to go through, to make sure everything is correct.
