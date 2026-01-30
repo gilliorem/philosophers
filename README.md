@@ -6,14 +6,16 @@ This project is an introduction to the use of threads and mutexes.
 Thread is a unit of execution within a process.
 *What does that mean ?*
 
-A process has [1] to [many] threads
-Threads run simultaneously.
-One program can execute multiple threads (concurrently), the `main()` being the #thread1.
-Unlike sequence programming, thread-programming will not execute the code in sequence (top down).
-The instructions run synchronously (well not exactly), it depends on the OS scheduler.
+A process has [1] to [many] threads.
+Unlike a multi-sequence-program, a multi-threads-program will not execute the code in sequence (top down).
+One program can execute multiple threads concurrently.
+The main thread is the one running the program.
+
+In a multi-threading program,
+the instructions run synchronously (well not exactly), it depends on the OS scheduler.
 That means that it is out of our control.
 
-For instance, if we create 2 threads in our programm, #thread2 can run before #thread1
+For instance, if we create 2 threads in our program, #thread2 can run before #thread1
 and, the next the program run, the OS scheduler might decide to run #thread1 first...
 "I thought that programming was deterministic."
 You were wrong.
@@ -43,16 +45,19 @@ a philosopher dies of starvation.
 
 *"Why the f do we even need threads to do this project ?"*
 
-Because philosophers aren't like women, they can do only one thing at the same time.
-And, to prevent death, they will need to do things *synchronously*.
+Because a philosopher isnt't a woman, he can only only *one thing at the same time*
+And, to prevent death, the philosophers will need to do things *synchronously*.
  
 While a philosopher is eating, another one might be sleeping or thinking.
 Multithreading is making this possible.
-The difficulty is that every philosopher needs to eat within `time_to_die` holding two forks.
+The difficulty is that every philosopher needs to eat within `time_to_die`, and holding two forks.
+
 
 Now,
 at this point in the project, **I had no fucking clue of what I was suppose to do**. Even though I roughly understand how threads can work together,
 regarding the *dining philosophers* problem, I didn't know what to do.
+
+![visual representation](https://imgflip.com/memegenerator/97794369/asian-guy)
 
 So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
 Let's say that a thread is a Writer, and there is one marker.
