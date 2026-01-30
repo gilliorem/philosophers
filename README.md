@@ -52,25 +52,83 @@ While a philosopher is eating, another one might be sleeping or thinking.
 Multithreading is making this possible.
 The difficulty is that every philosopher needs to eat within `time_to_die`, and holding two forks.
 
-
-Now,
-at this point in the project, **I had no fucking clue of what I was suppose to do**. Even though I roughly understand how threads can work together,
-regarding the *dining philosophers* problem, I didn't know what to do.
-
 ![visual representation](https://media.tenor.com/f9aThtyRQS4AAAAM/jackie-chan-meme.gif)
 
-So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
+Now,
+at this point in the project, **I had no fucking clue of what I was suppose to do**.
+Even though I roughly understand how threads can work together,
+regarding the *dining philosophers* problem, I didn't know what to do.
+
+So here, I will break down the whole *simulation* layer and explain it the way I understand it.
+
 Let's say that a thread is a Writer, and there is one marker.
+
 You hold the marker, you write.
-You releise the marker.
-if someone else want to write, he needs to holds the marker, write, reliese.
+
+You release the marker.
+
+While a Writer writes, another can think about what he's gonna write next and vice-versa.
+
+If someone else wants to write, he needs to holds the marker, write, release.
+
+If there is only 1 pen and 2 writers, each writer will need to wait for the pen to be released.
+
+Though, they can think with their own mind (no need to share any resource here).
+
+And...
+
+That is all.
+
+The main idea is here. It is just that instead of being Writer, we are dealing with philosophers.
+The whole difficulty of this project is actually to cut down the *abstract simulation* into a C-working program.
+
+So let's implement a simpler simulation with basics elements so there is a program runing.
+And from there, we can add complexity.
+
+But first, let's define the two problems that show up when we run a multithreaded-program.
+
+Remember ?
+
+Threads run concurrently: they use share the same memory space.
+So that might leed to some issue manipulating a variable that is being modify in two different threads.
+Let's see an example.
+
+```C
+
+#include <pthread.h>
+#include <stdio.h>
+
+int meals;
+
+void	*increment_meals()
+{
+	for (int i = 0; i < 100000; i++)
+		meals++;
+	return NULL;
+}
+
+int main()
+{
+	pthread_t t1;
+	pthread_t t2;
+
+	pthread_create(&t1, NULL, &increment_meals, NULL);
+	pthread_create(&t2, NULL, &increment_meals, NULL);
+
+	pthread_join(t1, NULL);
+	pthread_join(t2, NULL);
+
+	printf("meals:%d\n", meals);
+	return 0;
+}
+```
 
 ### DEADLOCK
 - You hold the pen
 - Someone hold the eraser
 - You wait for the eraser
 - The other guy waits for the pen
-- → nobody writes, forever *waiting for a shared resource to be releised*
+- → nobody writes, forever *waiting for a shared resource to be released*
 
 Note that in this example one shared resource is the pen and another one is the eraser.
 It can be the same that resource that is being shared.
@@ -111,11 +169,26 @@ So we have
 *Let's not worry so much about the elements, for now, the idea is just to have a program runing for now !*
 
 ```C
+#include <pthread.h> //pthread
+#include <stdio.h> //printf
+#include <unistd.h> //usleep
+#include <stdlib.h> //calloc
+
+/* this are just pre-register instructions because I use
+ * philos struct in table struct before defining it, 
+ * see it as prototypes so compiler knows I will define 
+ * those data type and remove the warnings */
+
+typedef struct s_table t_table;
+typedef struct s_philo t_philo;
+typedef struct s_timer t_timer;
+
 typedef struct s_table
 {
 	int	number_of_philos;
 	t_philo *philos;	
 } t_table;
+
 typedef struct s_philo
 {
 	int id;
@@ -123,34 +196,45 @@ typedef struct s_philo
 	int time_to_sleep;
 	pthread_t t;
 } t_philo;
+
 typedef struct s_timer
 {
 	int now;
 	int elapsed_time;
-}
+} t_timer;
 
 void *philo_routine(void *arg)
 {
 	t_philo *philo = (t_philo*) arg;
 	
-	while (1)
+	for(int i = 0; i < 100000; i++)
 	{
-		printf("philo %d eats", philo->id);
+		printf("philo %d eats\n", philo->id);
 		usleep(philo->time_to_eat * 1000);
-		printf("philo %d sleeps", philo->id);
+		printf("philo %d sleeps\n", philo->id);
 		usleep(philo->time_to_sleep * 1000);
 	}
+	return NULL;
 }
 
 int main()
 {
-	t_table *table = init_table();
-	init_elements(table);
-	
+	t_table *table = calloc(1, sizeof(t_table));
+	table->number_of_philos = 2;
+	table->philos = calloc(table->number_of_philos, sizeof(t_philo)); 
 	for (int i = 0; i < 2; i++)
-		pthread_create(&table->philo[i].t, NULL, &philo_routine, &philo[i]);
+	{
+		table->philos[i].id = i + 1;
+		table->philos[i].time_to_eat = 200;
+		table->philos[i].time_to_sleep = 500;
+	}
 	for (int i = 0; i < 2; i++)
-		pthread_join(table->philo[i].t, NULL);
+		pthread_create(&table->philos[i].t, NULL, &philo_routine, &table->philos[i]);
+	usleep(10000);
+	for (int i = 0; i < 2; i++)
+		pthread_join(table->philos[i].t, NULL);
+
+	return 0;
 }
 ```
 
