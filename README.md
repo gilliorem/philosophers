@@ -124,27 +124,36 @@ int main()
 ```
 ### RACE CONDITION
 Threads do not communicate to each other, so every time a thread perfom (more than one-step-action) to the shared-variable, it might read it wrong.
-Yes, incrementing an int is actually a 3-steps-action. (Think of memcpy: we need a temp variable in order to copy while keeping our original pointer).
-In order to see what happens exactly, let's diassemble the code.
-when we do meals++ we actually do 3 things:
-- read value
-- increment value
-- write value
+Incrementing an integer is not an atomic operation. Even though meals++ looks like a single instruction in C, it actually expands into multiple machine-level steps.
+
+Conceptually, it works like this:
+
+- Read the current value from memory
+- Modify the value (increment)
+- Write the new value back to memory
+
+This is similar to how memcpy works internally: data is first read into a temporary register before being written elsewhere.
 
 
 ```s
 
-	movl	meals(%rip), %eax
-	addl	$1, %eax
-	movl	%eax, meals(%rip)
+	movl	meals(%rip), %eax ; read value from memory into register
+	addl	$1, %eax	  ; increment register
+	movl	%eax, meals(%rip) ; write value back to memory
 ```
 
-if thread#1 and thread#2 read value of meals in the same time: 20
-then thread#1 decides to increment it 7 times in a row: write 27
-and then thread#2 reads it: it is still 20
-increment by one: 21
-write it
-now back to thread 1: 21
+Assume meals == 20 in memory.
+
+- Thread #1 reads meals → gets 20
+- Thread #2 reads meals → also gets 20
+- Thread #1 increments and writes → 21
+- Thread #2 increments and writes → 21
+
+Even though two increments happened, the final value is 21 instead of 22.
+
+This is a lost update, caused by both threads reading the same initial value before either write occurred.
+
+The final result depends on timing, not logic — which is the defining property of a race condition.
 
 This is a race condition: the order of execution is not guaranteed.
 
@@ -168,9 +177,13 @@ Note that in this example one shared resource is the marker and another one is t
 It can be the same shared-resource that is being shared.
 
 In philosophers, the shared resource is the fork: a philosopher needs 2 forks to eat.
-Picture this: 2 philos sit at a *round* table. there are 2 forks. (yes they share their forks... I guess they didnt care about covid backthen)
+Picture this: 2 philos sit at a *round* table. there are 2 forks. (yes they share forks... they didn't care backthen).
+
 If they both pick their *left* fork first in the same time, they will never be able to pick up the second fork.
+
 Since it is a round table, they are facing each other: one's left fork is the right fork of the other.
+They end up waiting forever.
+
 It is not to important at the begining of the project to worry about deadlock, eventually, as the program gets more complex, deadlock will happen and it will become easier to visualize what's happening.
 
 
@@ -185,7 +198,7 @@ So we have
 - Philosophers
 - a Timer
 
-*Let's not worry so much about all the elements, for now, the idea is just to have a program runing for now !*
+*Let's not worry so much about all the elements, the idea is just to have a program runing for now !*
 
 ```C
 #include <pthread.h> //pthread
@@ -193,14 +206,14 @@ So we have
 #include <unistd.h> //usleep
 #include <stdlib.h> //calloc
 
-/* this are just pre-register instructions because I use
- * philos struct in table struct before defining it, 
- * see it as prototypes so compiler knows I will define 
- * those data type and remove the warnings */
-
 typedef struct s_table t_table;
 typedef struct s_philo t_philo;
 typedef struct s_timer t_timer;
+
+/* these are just pre-register instructions because I use
+ * philos struct in table struct before defining it, 
+ * see it as prototypes so compiler knows I will define 
+ * those data type and remove the warnings */
 
 typedef struct s_table
 {
@@ -258,17 +271,19 @@ int main()
 ```
 
 Now that we have a program running with multiple threads, it's time to check if those philo deserve to live
+and if not KILL HIM.
 
-and if the answer is no, kill them ! YES, finally, the fun part when people die.
+Finally, the fun part begins.
 
 In order to do so we are going to use a Monitor, that will just keep track of time.
 So we will get the starting time of simulation (and at this time, we start a stopwatch).
+
 And from this point onwards, every x milliseconds we are going to get the time since we start and check
 if someone should be dead by now, and if it is the case. kill someone and stop the simulation.
+
 (same idea if we use the last argument `number_each_philosophers_must_eat`) but this time we keep track of their meals.
 
 #### IS MONITOR A THREAD ?
-
 ...
 ...
 
@@ -278,7 +293,7 @@ if not, how is he gonna know that someone died ?
 
 since he is constantly checking if the time since the last philo's meal isn't exceding his time to die.
 
-It will become so obvious once you start the implementation.
+*It will become obvious once you start the implementation.*
 
 #### PREVENT DEADLOCK
 Back to the picking each other's left fork problem (that leads to a deadlock).
@@ -292,6 +307,10 @@ To prevent this we need to use *Asymetry*
 The simpliest form would be that *some* of the philosophers wait before taking the forks,
 or (better), depending on where you are sitting around the table, you will have to pick the same
 fork first...
+
+### THAT'S IT ?
+And yes, there you have it, that's the whole simulation...
+
 
 ### PROGRAM FLOW
 1. Initialization and parsing
