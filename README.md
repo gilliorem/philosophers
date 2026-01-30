@@ -85,14 +85,13 @@ The whole difficulty of this project is actually to cut down the *abstract simul
 So let's implement a simpler simulation with basics elements so there is a program runing.
 And from there, we can add complexity.
 
-But first, let's define the two problems that show up when we run a multithreaded-program.
+But first, let's define two problems that show up when we run a multithreaded-program.
 
 Remember ?
 
-Threads run concurrently: they use share the same memory space.
-So that might leed to some issue manipulating a variable that is being modify in two different threads.
+Threads run concurrently: they share the same memory space.
+So that might leed to some issue manipulating a variable that is being modified in different threads.
 Let's see an example.
-
 ```C
 
 #include <pthread.h>
@@ -122,6 +121,27 @@ int main()
 	return 0;
 }
 ```
+### RACE CONDTION
+Threads do not communicate to each other, so every time a thread perfom (more than one-step-action) to the shared-variable, it might read it wrong.
+In order to see what happens exactly, let's diassemble the code.
+when we do meals++ we actually do 3 things:
+- read value
+- increment value
+- write value
+
+if thread#1 and thread#2 read value of meals in the same time: 20
+then thread#1 decides to increment it 7 times in a row: write 27
+and then thread#2 reads it: it is still 20
+increment by one: 21
+write it
+now back to thread 1: 21
+
+```s
+
+	movl	meals(%rip), %eax
+	addl	$1, %eax
+	movl	%eax, meals(%rip)
+```
 
 ### DEADLOCK
 - You hold the pen
@@ -139,21 +159,6 @@ If they both pick their *left* fork first in the same time, they will never be a
 Since it is a round table, they are facing each other: one's left fork is the right fork of the other.
 It is not to important at the begining of the project to worry about deadlock, eventually, as the program gets more complex, deadlock will happen and it will become easier to visualize what's happening.
 
-### RACE CONDTION
-Before printing your report, you want somebody to go through, to make sure everything is correct.
-your report is long so you ask a second person to go through.
-You endup having pages that have been review twice because your workers didn't coordinate properly together. 
-and other not being review at all.
-and at some point, of them put a none review page on top of the review pile because he thought you had review it! 
-they move the report page to the "review pile" but since they were many pages some got into this pile without being review.
-- Both workers read it at the same time (say it’s 10)
-- Both decide to review page 10
-- Both increment it to 11
-- Result: page 11 gets skipped, page 10 reviewed twice
-- Last page will never get review
-
-Thread-local resources (such as a worker’s own data or tools) do not require synchronization, but any resource accessed by multiple threads must be protected to avoid race conditions or deadlocks.
-If this explanation isn't clear enough, check Code Vault videos and Oceano's.
 
 ### STRUCTURE
 Let's represent the elements we have in the simulation and try to run our first multithreaded program.
