@@ -7,9 +7,10 @@ Thread is a unit of execution within a process.
 *What does that mean ?*
 
 A process has [1] to [many] threads.
-Unlike a multi-sequence-program, a multi-threads-program will not execute the code in sequence (top down).
+Unlike a multi-sequence-program, a multi-thread-program will not execute the code in sequence (top down).
 One program can execute multiple threads concurrently.
-The main thread is the one running the program.
+
+*The main thread being the the one running the program.*
 
 In a multi-threading program,
 the instructions run synchronously (well not exactly), it depends on the OS scheduler.
@@ -22,7 +23,7 @@ You were wrong.
 
 ![visual representation](https://www.iitk.ac.in/esc101/05Aug/tutorial/figures/essential/threads-two.gif)
 
-**Here are the key things you need to know to succeed in this assignment:**
+**Here are the key things we need to know to succeed in this assignment:**
 - One or more philosophers sit at a round table.
 There is a large bowl of spaghetti in the middle of the table.
 
@@ -63,7 +64,7 @@ So here, I will break down the whole *simulation* layer and explain it the way I
 
 Let's say that a thread is a Writer, and there is one marker.
 
-You hold the marker, you write.
+You hold the marker, we write.
 
 You release the marker.
 
@@ -85,13 +86,13 @@ The whole difficulty of this project is actually to cut down the *abstract simul
 So let's implement a simpler simulation with basics elements so there is a program runing.
 And from there, we can add complexity.
 
-But first, let's define two problems that show up when we run a multithreaded-program.
+But first, let's define two problems that show up when we running a multithreaded-program.
 
 Remember ?
 
 Threads run concurrently: they share the same memory space.
-So that might leed to some issue manipulating a variable that is being modified in different threads.
-Let's see an example.
+So that might lead to some issue manipulating a variable that is being modified in different threads.
+Let's C an example. (LOL)
 ```C
 
 #include <pthread.h>
@@ -123,18 +124,13 @@ int main()
 ```
 ### RACE CONDTION
 Threads do not communicate to each other, so every time a thread perfom (more than one-step-action) to the shared-variable, it might read it wrong.
+Yes, incrementing an int is actually a 3-steps-action. (Think of memcpy: we need a temp variable in order to copy while keeping our original pointer).
 In order to see what happens exactly, let's diassemble the code.
 when we do meals++ we actually do 3 things:
 - read value
 - increment value
 - write value
 
-if thread#1 and thread#2 read value of meals in the same time: 20
-then thread#1 decides to increment it 7 times in a row: write 27
-and then thread#2 reads it: it is still 20
-increment by one: 21
-write it
-now back to thread 1: 21
 
 ```s
 
@@ -143,7 +139,25 @@ now back to thread 1: 21
 	movl	%eax, meals(%rip)
 ```
 
+if thread#1 and thread#2 read value of meals in the same time: 20
+then thread#1 decides to increment it 7 times in a row: write 27
+and then thread#2 reads it: it is still 20
+increment by one: 21
+write it
+now back to thread 1: 21
+
+This is a race condition: the order of execution is not guaranteed.
+
+We use mutex to avoid it.
+```C
+pthread_mutex mutex_meals;
+
+	pthread_mutex_lock(&mutex_meals);	
+	meals++;
+	pthread_mutex_unlock(&mutex_meals);	
+```
 ### DEADLOCK
+
 - You hold the pen
 - Someone hold the eraser
 - You wait for the eraser
@@ -171,7 +185,7 @@ So we have
 - Philosophers
 - a Timer
 
-*Let's not worry so much about the elements, for now, the idea is just to have a program runing for now !*
+*Let's not worry so much about all the elements, for now, the idea is just to have a program runing for now !*
 
 ```C
 #include <pthread.h> //pthread
@@ -243,24 +257,48 @@ int main()
 }
 ```
 
+Now that we have a program running with multiple threads, it's time to check if those philo deserve to live
+
+and if the answer is no, kill them ! YES, finally, the fun part when people die.
+
+In order to do so we are going to use a Monitor, that will just keep track of time.
+So we will get the starting time of simulation (and at this time, we start a stopwatch).
+And from this point onwards, every x milliseconds we are going to get the time since we start and check
+if someone should be dead by now, and if it is the case. kill someone and stop the simulation.
+(same idea if we use the last argument `number_each_philosophers_must_eat`) but this time we keep track of their meals.
+
+#### IS MONITOR A THREAD ?
+
+...
+...
+
+Of course.
+Because this guy will run in parrallel to our philo threads, 
+if not, how is he gonna know that someone died ?
+
+since he is constantly checking if the time since the last philo's meal isn't exceding his time to die.
+
+It will become so obvious once you start the implementation.
+
+#### PREVENT DEADLOCK
+Back to the picking each other's left fork problem (that leads to a deadlock).
+
+In order to prevent this deadlock we need to break the one of these two deadlock conditions:
+- Mutual exclusion: only one process may use a resource at a time (nope), *why not this one ?*
+- Circular wait: #Thread1 waiting for #Thread2 to give up a shared-resource, #Thread3 is waiting for #Thread2 and so on.
+
+To prevent this we need to use *Asymetry*
+
+The simpliest form would be that *some* of the philosophers wait before taking the forks,
+or (better), depending on where you are sitting around the table, you will have to pick the same
+fork first...
+
 ### PROGRAM FLOW
-1. Parse the argument
-	int input[5];
-	`for (int i = 1; i <= 5; i++) {input[i] = atoi(av[i])}`
-We are going to compare these values against time, which is why we turn this into numeric values.
-2. Routines
-	 | 		|
-	odd		even
-
-	take fork in spec order (to avoid  deadlock)
-	eat				| other philos are thinking|sleeping
-	put back fork			
-
-4. Time module
-	`now_ms = (now.tv_sec * 1000) + (now.tv_usec / 1000);`
-5. Monitor 
-Looking up for ending the simulation when needed (in two cases):
-Constantly checking if someone is dead and has everyone eaten yet?
+1. Initialization and parsing
+2. Create and "launch the Threads"
+3. End the simulation (if needed) 
+4. End the threads properly, destroy the mutexes
+5. Free the allocated memory
 
 ## Instructions
 ```bash
@@ -273,13 +311,16 @@ Example:
 ./philo 5 800 200 200 7
 ```
 
-
 ## RESOURCES
 ### READING AND DOCUMENTATION
 - Function Manuals - `gettimeofday - pthread_create - pthread_mutex_lock`
 - Stack overflow: Found an interesting discussion expressing different ways to use time related functionnalities in C.
 - Operating Systems: Three Easy Pieces (Concurrency part)
-- GPT: Discussion on how to tackle the problem in a modular way. Examine and experiment solutions to avoid deadlock.
+- GPT: Discussions on:
+-	How to tackle the problem in a modular way. 
+-	Memory-wise: the proper way to initialize each datatype of the program.
+-	Thread argument: how to properly uses `void *arg`		
+
 ### VIDEO
 - Code vault: Intro on thread and mutex use: *https://www.youtube.com/watch?v=d9s_d28yJq0&list=PLfqABt5AS4FmuQf70psXrsMLEDQXNkLq2*
 - Jamshidbek Ergashev: *https://www.youtube.com/watch?v=UGQsvVKwe90*
@@ -291,7 +332,7 @@ Example:
 - chikoh helped me understand the project by visualizing it as in Overcook game.
 - wchoo offers me to read his code as reference
 - cedric helped managing routine's arguments and pass data around my program
-- yucchen helped me testing my program and checking my argc
+- yucchen helped me testing my program and checking my argc and helped me check the end in printing function to avoid extra logs.
 - ivho gave me great advices on how to earn living time by postponing the simulation
 
 ### TEST AND COMPARE
