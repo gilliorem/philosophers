@@ -57,7 +57,7 @@ Now,
 at this point in the project, **I had no fucking clue of what I was suppose to do**. Even though I roughly understand how threads can work together,
 regarding the *dining philosophers* problem, I didn't know what to do.
 
-![visual representation](https://imgflip.com/memegenerator/97794369/asian-guy)
+![visual representation](https://media.tenor.com/f9aThtyRQS4AAAAM/jackie-chan-meme.gif)
 
 So here, I will break down the whole *simulation* layer and explaining it the way I understand it.
 Let's say that a thread is a Writer, and there is one marker.
