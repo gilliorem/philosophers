@@ -72,7 +72,7 @@ While a Writer writes, another can think about what he's gonna write next and vi
 
 If someone else wants to write, he needs to holds the marker, write, release.
 
-If there is only 1 pen and 2 writers, each writer will need to wait for the pen to be released.
+If there is only 1 marker and 2 writers, each writer will need to wait for the marker to be released.
 
 Though, they can think with their own mind (no need to share any resource here).
 
@@ -161,10 +161,10 @@ pthread_mutex mutex_meals;
 - You hold the marker
 - Someone hold the eraser
 - You wait for the eraser
-- The other guy waits for the pen
+- The other guy waits for the marker
 - → nobody writes, forever *waiting for a shared resource to be released*
 
-Note that in this example one shared resource is the pen and another one is the eraser.
+Note that in this example one shared resource is the marker and another one is the eraser.
 It can be the same that resource that is being shared.
 
 In philosophers, the shared resource is the fork: a philosopher needs 2 forks to eat.
