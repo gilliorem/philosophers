@@ -62,9 +62,9 @@ regarding the *dining philosophers* problem, I didn't know what to do.
 
 So here, I will break down the whole *simulation* layer and explain it the way I understand it.
 
-Let's say that a thread is a Writer, and there is one marker.
+Let's say that a thread is a Writer, and there is one marker (to share).
 
-You hold the marker, we write.
+You hold the marker, you write.
 
 You release the marker.
 
@@ -158,7 +158,7 @@ pthread_mutex mutex_meals;
 ```
 ### DEADLOCK
 
-- You hold the pen
+- You hold the marker
 - Someone hold the eraser
 - You wait for the eraser
 - The other guy waits for the pen
