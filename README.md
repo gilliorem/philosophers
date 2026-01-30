@@ -122,7 +122,7 @@ int main()
 	return 0;
 }
 ```
-### RACE CONDTION
+### RACE CONDITION
 Threads do not communicate to each other, so every time a thread perfom (more than one-step-action) to the shared-variable, it might read it wrong.
 Yes, incrementing an int is actually a 3-steps-action. (Think of memcpy: we need a temp variable in order to copy while keeping our original pointer).
 In order to see what happens exactly, let's diassemble the code.
@@ -165,7 +165,7 @@ pthread_mutex mutex_meals;
 - → nobody writes, forever *waiting for a shared resource to be released*
 
 Note that in this example one shared resource is the marker and another one is the eraser.
-It can be the same that resource that is being shared.
+It can be the same shared-resource that is being shared.
 
 In philosophers, the shared resource is the fork: a philosopher needs 2 forks to eat.
 Picture this: 2 philos sit at a *round* table. there are 2 forks. (yes they share their forks... I guess they didnt care about covid backthen)
@@ -327,7 +327,7 @@ Example:
 - Chris Kanich, Deadlock in 3 minutes: *https://www.youtube.com/watch?v=oEbXlSH8hyE&pp=ygUfdGhyZWFkIGRlYWRsb2NrIGFuaW1hdGlvbiB0cmFpbtgGB9IHCQl8CgGHKiGM7w%3D%3D*
 - Oceano: - *https://www.youtube.com/watch?v=zOpzGHwJ3MU&pp=ygUPcGhpbG9zb3BoZXJzIDQy2AaILQ%3D%3D*
 	- Threads and Race condtions: *https://www.youtube.com/watch?v=mvZKu0DfFLQ*
-	- Deadlock:* https://www.youtube.com/watch?v=rFYYifVj5gs*
+	- Deadlock:*https://www.youtube.com/watch?v=rFYYifVj5gs*
 ### FELLOW 42 STUDENTS
 - chikoh helped me understand the project by visualizing it as in Overcook game.
 - wchoo offers me to read his code as reference
