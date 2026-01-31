@@ -3,21 +3,24 @@
 
 ## DESCRIPTION
 This project is an introduction to the use of threads and mutexes.
-Thread is a unit of execution within a process.
+A thread is a unit of execution within a process.
+
 *What does that mean ?*
 
 A process has [1] to [many] threads.
-Unlike a multi-sequence-program, a multi-thread-program will not execute the code in sequence (top down).
-One program can execute multiple threads concurrently.
+Unlike a sequenced-program, a multi-threaded-program will not execute the code in sequence (top down).
+The program instructions will be run in parrallel.
+The threads are running concurrently. *just a fancy word to say in parrallel*
 
-*The main thread being the the one running the program.*
+*The main thread is the the one running the program.*
 
-In a multi-threading program,
+In a multi-threaded program,
 the instructions run synchronously (well not exactly), it depends on the OS scheduler.
+
 That means that it is out of our control.
 
 For instance, if we create 2 threads in our program, #thread2 can run before #thread1
-and, the next the program run, the OS scheduler might decide to run #thread1 first...
+and, the next time the program run, the OS scheduler might decide to run #thread1 first...
 "I thought that programming was deterministic."
 You were wrong.
 
@@ -68,27 +71,37 @@ You hold the marker, you write.
 
 You release the marker.
 
-While a Writer writes, another can think about what he's gonna write next and vice-versa.
+While a Writer *writes*, another can *think* about what he's gonna write next and vice-versa.
 
 If someone else wants to write, he needs to holds the marker, write, release.
 
 If there is only 1 marker and 2 writers, each writer will need to wait for the marker to be released.
 
-Though, they can think with their own mind (no need to share any resource here).
+Though, they can think with their own mind (no need to share any resource here),
+they cannot write without the marker.
+
+Suppose we have two Writers,
+so the *routine* can be:
+- Hold the marker, write
+- Release the marker, Think
+
+Since writers are *threads running in parrallel*, one is gonna wait for the first round of writing and then, they will run together until we stop the simulation.
 
 And...
 
 That is all.
 
-The main idea is here. It is just that instead of being Writer, we are dealing with philosophers.
+The main idea is here. It is just that instead of Writers, we are dealing with philosophers.
+
 The whole difficulty of this project is actually to cut down the *abstract simulation* into a C-working program.
 
-So let's implement a simpler simulation with basics elements so there is a program runing.
+So let's implement a simpler simulation with basic elements so there is a program runing.
+
 And from there, we can add complexity.
 
-But first, let's define two problems that show up when we running a multithreaded-program.
+But first, let's define two problems that will show up when we are dealing with multithreaded-program.
 
-Remember ?
+*Remember ?*
 
 Threads run concurrently: they share the same memory space.
 So that might lead to some issue manipulating a variable that is being modified in different threads.
@@ -124,6 +137,7 @@ int main()
 ```
 ### RACE CONDITION
 Threads do not communicate to each other, so every time a thread perfom (more than one-step-action) to the shared-variable, it might read it wrong.
+
 Incrementing an integer is not an atomic operation. Even though meals++ looks like a single instruction in C, it actually expands into multiple machine-level steps.
 
 Conceptually, it works like this:
@@ -155,7 +169,7 @@ This is a lost update, caused by both threads reading the same initial value bef
 
 The final result depends on timing, not logic — which is the defining property of a race condition.
 
-This is a race condition: the order of execution is not guaranteed.
+In a race condition: the order of execution is not guaranteed.
 
 We use mutex to avoid it.
 ```C
@@ -179,7 +193,7 @@ It can be the same shared-resource that is being shared.
 In philosophers, the shared resource is the fork: a philosopher needs 2 forks to eat.
 Picture this: 2 philos sit at a *round* table. there are 2 forks. (yes they share forks... they didn't care backthen).
 
-If they both pick their *left* fork first in the same time, they will never be able to pick up the second fork.
+If they both pick their *left* fork first at the same time, they will never be able to pick up the second fork.
 
 Since it is a round table, they are facing each other: one's left fork is the right fork of the other.
 They end up waiting forever.
@@ -189,8 +203,11 @@ It is not to important at the begining of the project to worry about deadlock, e
 
 ### STRUCTURE
 Let's represent the elements we have in the simulation and try to run our first multithreaded program.
-Since the whole program is a *simulation*, I find it good to use *Object Oriented* approach to represent the different elements of our program.
-For instance, there is no such type as *philo* or *fork*... That's why it can be tricky and hard to visualize what is going on at a *C* level.
+
+Since the whole program is a *simulation*, I find it good to use an *Object Oriented* approach to represent the different elements of our program.
+
+For instance, there is no such data-type as *philo* or *fork*... That's why it can be tricky and hard to visualize what is going on at a *C* level.
+
 Representing those elements using structs is helpfull to better understand what is happening.
 
 So we have
@@ -270,16 +287,16 @@ int main()
 }
 ```
 
-Now that we have a program running with multiple threads, it's time to check if those philo deserve to live
-and if not KILL HIM.
+Now that we have a multi-threaded-program running, it's time to check if those philos deserve to live
+and if not, KILL THEM.
 
 Finally, the fun part begins.
 
 In order to do so we are going to use a Monitor, that will just keep track of time.
 So we will get the starting time of simulation (and at this time, we start a stopwatch).
 
-And from this point onwards, every x milliseconds we are going to get the time since we start and check
-if someone should be dead by now, and if it is the case. kill someone and stop the simulation.
+And from this point onwards, every x milliseconds we are going to get the time since we start *to eat* and check
+if someone should be dead by now, and if it is the case, murder him and stop the simulation.
 
 (same idea if we use the last argument `number_each_philosophers_must_eat`) but this time we keep track of their meals.
 
@@ -291,26 +308,25 @@ Of course.
 Because this guy will run in parrallel to our philo threads, 
 if not, how is he gonna know that someone died ?
 
-since he is constantly checking if the time since the last philo's meal isn't exceding his time to die.
+Since he is constantly checking if the philos's `time_since_last_meal` isn't exceding his `time_to_die`.
 
 *It will become obvious once you start the implementation.*
 
 #### PREVENT DEADLOCK
 Back to the picking each other's left fork problem (that leads to a deadlock).
 
-In order to prevent this deadlock we need to break the one of these two deadlock conditions:
-- Mutual exclusion: only one process may use a resource at a time (nope), *why not this one ?*
-- Circular wait: #Thread1 waiting for #Thread2 to give up a shared-resource, #Thread3 is waiting for #Thread2 and so on.
+In order to prevent this deadlock we need to break one of these two deadlock conditions:
+- Mutual exclusion: only one process may use a resource at a time. *why not this one ?*
+- Circular wait: #Thread1 waiting for #Thread2 to give up a shared-resource. #Thread3 is waiting for #Thread2 and so on.
 
 To prevent this we need to use *Asymetry*
 
 The simpliest form would be that *some* of the philosophers wait before taking the forks,
-or (better), depending on where you are sitting around the table, you will have to pick the same
+or (better), depending on where [this] philo sits around the table, he will have to pick the same
 fork first...
 
 ### THAT'S IT ?
 And yes, there you have it, that's the whole simulation...
-
 
 ### PROGRAM FLOW
 1. Initialization and parsing
@@ -357,7 +373,8 @@ Example:
 ### TEST AND COMPARE
 - mcombeau: *https://github.com/mcombeau/philosophers*
 
-### HONORABLE MENTIONS
-- Romain Gilliot helped me draw a parralelism and offer me large explanations on multithreaded program like a web server.
+### HONORABLE MENTION
+- Romain Gilliot helped me draw a parralelism with real-world working program runining using multiple threads, he offered me detailed explanations on (his) multithreaded web-server.
 He also helped me cut down layers of abstraction to a small working prototype which introduce a lot of Object Oriented Programming.
 Which I think this is a better way to represent the simulation.
+- *https://github.com/Rrominet*
