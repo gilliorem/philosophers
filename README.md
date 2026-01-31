@@ -20,7 +20,7 @@ the instructions run synchronously (well not exactly), it depends on the OS sche
 That means that it is out of our control.
 
 For instance, if we create 2 threads in our program, #thread2 can run before #thread1
-and, the next time the program run, the OS scheduler might decide to run #thread1 first...
+and, the next time the program runs, the OS scheduler might decide to run #thread1 first...
 "I thought that programming was deterministic."
 You were wrong.
 
@@ -49,12 +49,13 @@ a philosopher dies of starvation.
 
 *"Why the f do we even need threads to do this project ?"*
 
-Because a philosopher isnt't a woman, he can only only *one thing at the same time*
-And, to prevent death, the philosophers will need to do things *synchronously*.
+Because a philosopher isn't a woman, he can only do *one thing at the same time*.
+
+And, to prevent death, philosophers will need to do things *concurrently*.
  
 While a philosopher is eating, another one might be sleeping or thinking.
 Multithreading is making this possible.
-The difficulty is that every philosopher needs to eat within `time_to_die`, and holding two forks.
+The difficulty is that every philosopher needs to eat within `time_to_die`, while holding two forks.
 
 ![visual representation](https://media.tenor.com/f9aThtyRQS4AAAAM/jackie-chan-meme.gif)
 
@@ -83,9 +84,9 @@ they cannot write without the marker.
 Suppose we have two Writers,
 so the *routine* can be:
 - Hold the marker, write
-- Release the marker, Think
+- Release the marker, think
 
-Since writers are *threads running in parrallel*, one is gonna wait for the first round of writing and then, they will run together until we stop the simulation.
+Since writers are *threads running in parrallel*, one is gonna wait for the first round of writing and then, they will run together, simultaneously, until we stop the simulation.
 
 And...
 
@@ -136,7 +137,7 @@ int main()
 }
 ```
 ### RACE CONDITION
-Threads do not communicate to each other, so every time a thread perfom (more than one-step-action) to the shared-variable, it might read it wrong.
+Threads do not communicate to each other, so every time a thread perfoms *more than a one-step-action* on the shared-variable, it might read it wrong.
 
 Incrementing an integer is not an atomic operation. Even though meals++ looks like a single instruction in C, it actually expands into multiple machine-level steps.
 
@@ -147,7 +148,6 @@ Conceptually, it works like this:
 - Write the new value back to memory
 
 This is similar to how memcpy works internally: data is first read into a temporary register before being written elsewhere.
-
 
 ```s
 
@@ -179,32 +179,46 @@ pthread_mutex mutex_meals;
 	meals++;
 	pthread_mutex_unlock(&mutex_meals);	
 ```
-### DEADLOCK
+General rule to apply:
+- If the same variable is being modified by more than one thread, then that variable needs to be lock-unlock every time we interact with.
 
+Even in an if statement:
+
+```C
+pthread_mutex_lock(&mutex_meals);	
+if (meals > 100)
+{
+	printf("I am full\n");
+	pthread_mutex_unlock(&mutex_meals);	
+}
+pthread_mutex_unlock(&mutex_meals);	
+```
+
+### DEADLOCK
 - You hold the marker
 - Someone hold the eraser
 - You wait for the eraser
-- The other guy waits for the marker
+- An other Writer waits for the marker
 - → nobody writes, forever *waiting for a shared resource to be released*
 
-Note that in this example one shared resource is the marker and another one is the eraser.
-It can be the same shared-resource that is being shared.
-
 In philosophers, the shared resource is the fork: a philosopher needs 2 forks to eat.
-Picture this: 2 philos sit at a *round* table. there are 2 forks. (yes they share forks... they didn't care backthen).
 
-If they both pick their *left* fork first at the same time, they will never be able to pick up the second fork.
+Picture this:
 
-Since it is a round table, they are facing each other: one's left fork is the right fork of the other.
+2 philosophers sit at a *round* table. there are 2 forks AND they need both of the 2 forks to be able to eat (because they are eating spaghetti, *I would personnaly have use a knife to... you know... hm whatever*). (so yes they share the same forks... they didn't care backthen).
+
+If they both pick their *left* fork first at the same time, they will never be able to pick up the second *right* fork.
+
 They end up waiting forever.
 
-It is not to important at the begining of the project to worry about deadlock, eventually, as the program gets more complex, deadlock will happen and it will become easier to visualize what's happening.
+Since it is a round table, they are facing each other: one's left fork is the right fork of the other.
 
+It is not to important to worry about deadlock now, as the program gets more complex, deadlock will happen and it will become easier to visualize what's happening.
 
 ### STRUCTURE
 Let's represent the elements we have in the simulation and try to run our first multithreaded program.
 
-Since the whole program is a *simulation*, I find it good to use an *Object Oriented* approach to represent the different elements of our program.
+Since the whole program is a *simulation*, I find it good to use an *Object Oriented* approach to represent the different elements.
 
 For instance, there is no such data-type as *philo* or *fork*... That's why it can be tricky and hard to visualize what is going on at a *C* level.
 
@@ -293,12 +307,13 @@ and if not, KILL THEM.
 Finally, the fun part begins.
 
 In order to do so we are going to use a Monitor, that will just keep track of time.
-So we will get the starting time of simulation (and at this time, we start a stopwatch).
+
+So we need get the starting time of simulation. *It is like starting a stopwatch*.
 
 And from this point onwards, every x milliseconds we are going to get the time since we start *to eat* and check
 if someone should be dead by now, and if it is the case, murder him and stop the simulation.
 
-(same idea if we use the last argument `number_each_philosophers_must_eat`) but this time we keep track of their meals.
+(same idea if we use the last argument `number_each_philosophers_must_eat`) but this time, we are not only checking if someone is dying, we also keep track of their meals.
 
 #### IS MONITOR A THREAD ?
 ...
