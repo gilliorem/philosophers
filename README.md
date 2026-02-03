@@ -190,6 +190,7 @@ if (meals > 100)
 {
 	printf("I am full\n");
 	pthread_mutex_unlock(&mutex_meals);	
+	return ;
 }
 pthread_mutex_unlock(&mutex_meals);	
 ```
